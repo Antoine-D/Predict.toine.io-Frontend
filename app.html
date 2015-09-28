@@ -1,0 +1,146 @@
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <link rel="icon" href="../../favicon.ico">
+
+    <title>Narrow Jumbotron Template for Bootstrap</title>
+
+    <link href="assets/css/bootstrap.min.css" rel="stylesheet">
+    <link href="assets/css/custom.css" rel="stylesheet">
+
+    <style> 
+      .daily-steps-tally {
+        font-size: 600% !important;
+      }
+
+      @media (min-width: 1000px) {
+        .daily-steps-tally {
+          font-size: 900% !important;
+        }
+      }
+    </style>
+  </head>
+
+  <body  style="background-color: #F7F7F7;">
+
+    <div class="container">
+
+      <div class="jumbotron" style="background-color: #F7F7F7;">
+
+        <!-- Color of price when select current time and the price has gone up -->
+        <h1 class="daily-steps-tally" style="color: #53B981; margin-bottom: 0px;">$43.05</h1>
+        <p class="lead" style="color: #333A45;">
+          price at
+          <select>
+            <option>current time</option>
+            <option>time of prediction</option>
+          </select>
+        </p>
+
+        <!-- Color of price when select current time and the price has gone down -->
+        <h1 class="daily-steps-tally" style="color: #D80000; margin-bottom: 0px;">$43.05</h1>
+        <p class="lead" style="color: #333A45;">
+          price at
+          <select>
+            <option>current time</option>
+            <option>time of prediction</option>
+          </select>
+        </p>
+
+        <!-- Color of price when select time of prediction -->
+        <h1 class="daily-steps-tally" style="color: #FF9900; margin-bottom: 0px;">$43.05</h1>
+        <p class="lead" style="color: #333A45;">
+          price at
+          <select>
+            <option>current time</option>
+            <option>time of prediction</option>
+          </select>
+        </p>
+      </div>
+
+      <script src="http://code.jquery.com/jquery-1.9.1.js"></script>
+      <script src="http://code.highcharts.com/highcharts.js"></script>
+      <script src="http://code.highcharts.com/modules/exporting.js"></script>
+
+      <div style="background-color: white; border-radius: 12px; border: 1px solid white; border-width: thick;">
+        <h3 style="text-align: center;">Steps Per Minute vs. Temperature</h3>
+        <div id="chart-one" style="min-width: 310px; height: 400px; margin: 0 auto"></div>
+      </div>
+
+      <script>
+
+      $(function () {
+        $('#chart-one').highcharts({
+            chart: {
+                zoomType: 'xy'
+            },
+            colors: ['#286090'],
+            title: {
+                text: ''
+            },
+            subtitle: {
+                text: ''
+            },
+            exporting: { 
+              enabled: false 
+            },
+            xAxis: [{
+                categories: ['0:00', '1:00', '2:00', '3:00', '4:00', '5:00', '6:00', '7:00', '8:00', '9:00', '10:00', '11:00', '0:00', '1:00', '2:00', '3:00', '4:00', '5:00', '6:00', '7:00', '8:00', '9:00', '10:00', '11:00', '0:00', '1:00', '2:00', '3:00', '4:00', '5:00', '6:00', '7:00', '8:00', '9:00', '10:00', '11:00'],
+                crosshair: true
+            }],
+            yAxis: [{ // Primary yAxis
+              min: 0,
+              gridLineWidth: 0,
+                title: {
+                    text: 'Price ($)',
+                    style: {
+                        color: '#333A45'
+                    }
+                },
+                labels: {
+                    format: '{value}',
+                    style: {
+                        color: '#333A45'
+                    }
+                }
+            }],
+            tooltip: {
+                shared: true
+            },
+            series: [{
+                name: 'Steps Per Hour',
+                type: 'spline',
+                yAxis: 0,
+                data: [144, 0, 0, 0, 0, 0, 0, 0, 0, 266, 112, 43, 144, 0, 0, 0, 0, 0, 0, 0, 0, 266, 112, 43, 144, 0, 0, 0, 0, 0, 0, 0, 0, 266, 112, 43],
+                tooltip: {
+                    valueSuffix: ' steps'
+                }
+
+            }]
+        });
+      });
+      </script>
+
+      <div>
+
+      </div>
+
+
+      <script>
+        // Remove the highcharts.com label
+        setTimeout(function(){
+          $($('body').find("text")[$('body').find("text").length-1]).html("");
+        }, 100);
+      </script>
+
+    </div> <!-- /container -->
+
+  </body>
+</html>
