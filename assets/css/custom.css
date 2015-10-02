@@ -2,6 +2,7 @@
 body {
   padding-top: 20px;
   padding-bottom: 20px;
+  background-color: #F7F7F7;
 }
 
 /* Everything but the jumbotron gets side spacing for mobile first views */
@@ -31,6 +32,10 @@ body {
   border-top: 1px solid #e5e5e5;
 }
 
+.container {
+  margin-top: 40px;
+}
+
 /* Customize container */
 @media (min-width: 768px) {
   .container {
@@ -45,35 +50,73 @@ body {
 .jumbotron {
   text-align: center;
   border-bottom: 1px solid #e5e5e5;
-}
-.jumbotron .btn {
-  padding: 14px 24px;
-  font-size: 21px;
+  background-color: white;
+  padding-top: 20px;
+  padding-bottom: 20px;
+  margin-bottom: 40px;
 }
 
-/* Supporting marketing content */
-.marketing {
-  margin: 40px 0;
-}
-.marketing p + h4 {
-  margin-top: 28px;
+.jumbotron .main-button {
+  padding: 14px 24px;
+  font-size: 21px;
+  margin-bottom: 4px;
+  margin-right: 6px;
 }
 
 /* Responsive: Portrait tablets and up */
 @media screen and (min-width: 768px) {
   /* Remove the padding we set earlier */
-  .header,
-  .marketing,
   .footer {
     padding-right: 0;
     padding-left: 0;
-  }
-  /* Space out the masthead */
-  .header {
-    margin-bottom: 30px;
   }
   /* Remove the bottom border on the jumbotron for visual effect */
   .jumbotron {
     border-bottom: 0;
   }
+}
+
+.current-price-massive {
+  font-size: 600% !important;
+}
+
+@media (min-width: 1000px) {
+  .current-price-massive {
+    font-size: 900% !important;
+  }
+}
+
+.btn-custom {
+  background-color: #53B981;
+  color: white;
+}
+
+.btn-custom:hover, .btn-custom:target {
+  background-color: #53C781;
+  color: white;
+}
+
+.a-custom {
+  color: #53B981;
+}
+
+.a-custom:hover, .a-custom:target {
+  color: #53C781;
+  text-decoration: none;
+}
+
+.prediction-search-result {
+  font-size: 130%;
+  text-align: left;
+  margin-bottom: 8px;
+}
+
+h2 .symbol {
+  color: #286090;
+  font-size: 130%;
+}
+
+.symbol-dropdown {
+  font-size: 180%;
+  height: 180%;
 }
