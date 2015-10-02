@@ -14,137 +14,154 @@
 
     <link href="assets/css/bootstrap.min.css" rel="stylesheet">
     <link href="assets/css/custom.css" rel="stylesheet">
-
-    <style> 
-      .daily-steps-tally {
-        font-size: 600% !important;
-      }
-
-      @media (min-width: 1000px) {
-        .daily-steps-tally {
-          font-size: 900% !important;
-        }
-      }
-    </style>
   </head>
 
-  <body  style="background-color: #F7F7F7;">
+  <body>
 
     <div class="container">
 
-      <div class="jumbotron" style="background-color: #F7F7F7;">
-
-        <!-- Color of price when select current time and the price has gone up -->
-        <h1 class="daily-steps-tally" style="color: #53B981; margin-bottom: 0px;"><span class="glyphicon glyphicon-triangle-top" style="font-size: 70%;" aria-hidden="true"></span>$43.05</h1>
-        <p class="lead" style="color: #333A45;">
+      <div class="jumbotron">
+        <h2 style="font-weight: bold;">Apple Inc. <span class="symbol">AAPL</span></h2>
+        <p style="color: #333A45; font-size: 100%;">
           price at
           <select>
             <option>current time</option>
             <option>time of prediction</option>
           </select>
         </p>
+
+        <style>
+          .price-move-blink {
+              /* animation stuff */
+            animation-duration: 1000ms;
+            animation-name: blink;
+            animation-iteration-count: infinite;
+            animation-direction: normal;
+            -webkit-animation:blink 1000ms infinite; /* Safari and Chrome */
+          }
+
+          @keyframes blink {
+            from {
+                color: auto;
+            }
+            to {
+                color: white;
+            }
+          }
+          @-webkit-keyframes blink {
+              from {
+                  color: auto;
+              }
+              to {
+                  color: white;
+              }
+          }
+        </style>
+        <!-- Color of price when select current time and the price has gone up -->
+        <h1 id="current-price" class="current-price-massive" style="color: #53B981; margin-bottom: 0px;"><span class="glyphicon glyphicon-triangle-top" style="font-size: 70%;" aria-hidden="true"></span>$43.05</h1>
+        
+        <button id="test-price-move-button">Price Move Test</button>
 
         <!-- Color of price when select current time and the price has gone down -->
-        <h1 class="daily-steps-tally" style="color: #D80000; margin-bottom: 0px;"><span class="glyphicon glyphicon-triangle-bottom" style="font-size: 70%;" aria-hidden="true"></span>$43.05</h1>
-        <p class="lead" style="color: #333A45;">
-          price at
-          <select>
-            <option>current time</option>
-            <option>time of prediction</option>
-          </select>
-        </p>
+        <!--<h1 class="daily-steps-tally" style="color: #D80000; margin-bottom: 0px;"><span class="glyphicon glyphicon-triangle-bottom" style="font-size: 70%;" aria-hidden="true"></span>$43.05</h1>-->
 
         <!-- Color of price when select time of prediction -->
-        <h1 class="daily-steps-tally" style="color: #286090; margin-bottom: 0px;">$43.05</h1>
-        <p class="lead" style="color: #333A45;">
-          price at
-          <select>
-            <option>current time</option>
-            <option>time of prediction</option>
-          </select>
-        </p>
-      </div>
-
-      <script src="http://code.jquery.com/jquery-1.9.1.js"></script>
-      <script src="http://code.highcharts.com/highcharts.js"></script>
-      <script src="http://code.highcharts.com/modules/exporting.js"></script>
-
-      <div style="background-color: white; border-radius: 12px; border: 1px solid white; border-width: thick;">
-        <h3 style="text-align: center;">Stock Price Over Time</h3>
-        <div id="chart-one" style="min-width: 310px; height: 400px; margin: 0 auto"></div>
-      </div>
-
-      <script>
-
-      $(function () {
-        $('#chart-one').highcharts({
-            chart: {
-              type: 'area',
-              zoomType: 'xy'
-            },
-            colors: ['#FF9900'],
-            title: {
-                text: ''
-            },
-            subtitle: {
-                text: ''
-            },
-            exporting: { 
-              enabled: false 
-            },
-            xAxis: [{
-                categories: ['9/28 0:00', '9/28 1:00', '9/28 2:00', '9/28 3:00', '9/28 4:00', '9/28 5:00', '9/28 6:00', '9/28 7:00', '9/28 8:00', '9/28 9:00', '9/28 10:00', '9/28 11:00', '9/28 12:00', '9/28 13:00', '9/28 14:00', '9/28 15:00', '9/28 16:00', '9/28 17:00', '9/28 18:00', '9/28 19:00', '9/28 20:00', '9/28 21:00', '9/28 22:00', '9/28 23:00'],
-                crosshair: true,
-                labels: {
-                  step: 24
-                }
-            }],
-            yAxis: [{ // Primary yAxis
-              min: 0,
-              gridLineWidth: 0,
-                title: {
-                    text: 'Price ($)',
-                    style: {
-                        color: '#333A45'
-                    }
-                },
-                labels: {
-                    format: '{value}',
-                    style: {
-                        color: '#333A45'
-                    }
-                }
-            }],
-            tooltip: {
-                shared: true
-            },
-            series: [{
-                name: 'Price',
-                yAxis: 0,
-                data: [189.22, 189.22, 189.22, 189.22, 189.22,189.22, 189.22, 189.22, 189.22, 189.22, 189.28, 189.42, 189.62, 189.12, 188.92, 189.99, 189.67, 188.77, 188.77, 188.77, 188.77, 188.77, 188.77, 188.77],
-                tooltip: {
-                    valuePrefix: '$'
-                }
-
-            }]
-        });
-      });
-
-      </script>
-
-      <div>
-
+        <!--<h1 class="current-price-massive" style="color: #286090; margin-bottom: 0px;">$43.05</h1>-->
       </div>
 
 
-      <script>
-        // Remove the highcharts.com label
-        setTimeout(function(){
-          $($('body').find("text")[$('body').find("text").length-1]).html("");
-        }, 100);
-      </script>
+      <div class="jumbotron">
+        <h3 style="text-align: center;">Stock Price <span style="font-weight: italics;">Past 24 Hours</h3>
+        <div id="chart-one" style="min-width: 310px; height: 400px; margin: 0 auto; padding-bottom: 10px;"></div>
+      </div>
 
     </div> <!-- /container -->
 
   </body>
+
+  <script src="assets/js/jquery-1.11.3.min.js"></script>
+  <script src="http://code.highcharts.com/highcharts.js"></script>
+  <script src="http://code.highcharts.com/modules/exporting.js"></script>
+
+  <script>
+    $(document).ready(function() {
+      var restore_price_style_timeout;
+      $("#test-price-move-button").on("click", function() {
+        clearTimeout(restore_price_style_timeout);
+        $("#current-price").addClass("price-move-blink");
+        restore_price_style_timeout = setTimeout(function() { 
+          $("#current-price").removeClass("price-move-blink");
+        }, 800);
+      });
+
+      // draw the price graph
+      var stockPriceTimes = ['9/28 12:00am', '9/28 1:00am', '9/28 2:00am', '9/28 3:00am', '9/28 4:00am', '9/28 5:00am', '9/28 6:00am', '9/28 7:00am', '9/28 8:00am', '9/28 9:00am', '9/28 10:00am', '9/28 11:00am', '9/28 12:00pm', '9/28 1:00pm', '9/28 2:00pm', '9/28 3:00pm', '9/28 4:00pm', '9/28 5:00pm', '9/28 6:00pm', '9/28 7:00pm', '9/28 8:00pm', '9/28 9:00pm', '9/28 10:00pm', '9/28 11:00pm'];
+
+      var stockPrices = [189.22, 189.22, 189.22, 189.22, 189.22,189.22, 189.22, 189.22, 189.22, 189.22, 189.28, 189.42, 189.62, 189.12, 188.92, 189.99, 189.67, 188.77, 188.77, 188.77, 188.77, 188.77, 188.77, 188.77];
+
+      $('#chart-one').highcharts({
+        chart: {
+          zoomType: 'xy'
+        },
+        colors: ['#286090'],
+        title: {
+            text: ''
+        },
+        subtitle: {
+            text: ''
+        },
+        exporting: { 
+          enabled: false 
+        },
+        xAxis: [{
+            categories: stockPriceTimes,
+            crosshair: true,
+            title: {
+                text: '<br/>Date and Time (EST)',
+                style: {
+                    color: '#333A45'
+                }
+            },
+            labels: {
+              enabled: false
+            }
+        }],
+        yAxis: [{ // Primary yAxis
+          min: Math.min.apply(Math,stockPrices),
+          gridLineWidth: 0,
+            title: {
+                text: 'Price ($)',
+                style: {
+                    color: '#333A45'
+                }
+            },
+            labels: {
+                format: '{value}',
+                style: {
+                    color: '#333A45'
+                }
+            }
+        }],
+        legend: {
+            shared: true,
+            enabled: false
+        },
+        series: [{
+            name: 'Price',
+            yAxis: 0,
+            data: stockPrices,
+            tooltip: {
+                valuePrefix: '$'
+            }
+        }]
+      });
+    });
+  </script>
+
+  <script>
+    // Remove the highcharts.com label
+    setTimeout(function(){
+      $($('body').find("text")[$('body').find("text").length-1]).html("");
+    }, 100);
+  </script>
 </html>
