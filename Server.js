@@ -19,6 +19,10 @@ app.get('/app',function(req,res) {
     res.sendFile(path.join(__dirname+"/app.html"));
 });
 
+app.get('/create',function(req,res) {
+    res.sendFile(path.join(__dirname+"/create.html"));
+});
+
 /* Api Router */
 var getStepsRouter = express.Router();
 
@@ -94,4 +98,4 @@ function getCurrentDateTime() {
         minuteNumber + ":" + secondNumber;
 }
 
-app.listen(5000);
+app.listen(3060);

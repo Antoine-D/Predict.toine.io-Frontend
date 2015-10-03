@@ -1,0 +1,77 @@
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <link rel="icon" href="../../favicon.ico">
+
+    <title>Narrow Jumbotron Template for Bootstrap</title>
+
+    <link href="assets/css/bootstrap.min.css" rel="stylesheet">
+    <link href="assets/css/custom.css" rel="stylesheet">
+  </head>
+
+  <body>
+
+    <div class="container">
+      <div class="jumbotron">
+        <div>
+          <p style="text-align: left;">PredictionPrediction Prediction PredictionPrediction Prediction Prediction PredictionPrediction PredictionPredictionPrediction Prediction Prediction PredictionPrediction Prediction.</p>
+          <a class="btn btn-lg btn-custom main-button" href="create">Make a Prediction</a>
+          <a id="check-your-predictions-button" href="#predictions-search-section" class="btn btn-lg btn-custom main-button">Check on your Predictions</a>
+        </div>
+      </div>
+
+      <div class="jumbotron" id="predictions-search-section" style="display: none;">
+        <div>
+          <p style="text-align: left;"></p>
+          <input type='text' class='form-control' id='timetable-name' name='name' placeholder="Notify email or identity phrase."> <br/>
+          <a id="predictions-search-button" href="#predictions-results-section" class="btn btn-md btn-custom">Search</a>
+        </div>
+      </div>
+
+      <div class="jumbotron" id="predictions-results-section" style="display: none;">
+        <div>
+          <h4 style="text-align: center;">Your Predictions</h4>
+          <div class="prediction-search-result">
+            <a class="a-custom" href="app">I predict that AAPL will stay bellow $12.00 by 5:00pm on May 23 2015.</a>
+          </div>
+          <div class="prediction-search-result">
+            <a class="a-custom" href="app">I predict that AAPL will stay bellow $12.00 by 5:00pm on May 23 2015.</a>
+          </div>
+          <div class="prediction-search-result">
+            <a class="a-custom" href="app">I predict that AAPL will stay bellow $12.00 by 5:00pm on May 23 2015.</a>
+          </div>
+        </div>
+      </div>
+      <footer>
+        <hr>
+        <p id="copyright-notice">&copy; <a class="a-custom" href="http://www.antoinedahan.com">Antoine Dahan</a></p>
+      </footer>
+    </div> <!-- /container -->
+  </body>
+
+  <script src="assets/js/jquery-1.11.3.min.js"></script>
+  <script>
+    $(document).ready(function() {
+      // set copyright year in footer
+      $("#copyright-notice").html(
+        $("#copyright-notice").html() + " " + (new Date()).getFullYear());
+
+      $("#check-your-predictions-button").click(function() {
+        $("#predictions-search-section").show();
+      });
+
+      $("#predictions-search-button").click(function() {
+        $("#predictions-results-section").show();
+      });
+
+    });
+  </script>
+</html>
+

@@ -75,6 +75,18 @@
         <div id="chart-one" style="min-width: 310px; height: 400px; margin: 0 auto; padding-bottom: 10px;"></div>
       </div>
 
+      <footer>
+        <hr>
+        <p class="col-lg-6">
+          <span style="background-color: #53B981;" class="badge">
+            <a style="color: white;" href="/.">Home</a></span>
+          </span>
+          <span style="background-color: #53B981;" class="badge">
+            <a style="color: white;" href="create">Create</a></span>
+          </span>
+        </p>
+        <p id="copyright-notice">&copy; <a class="a-custom" href="http://www.antoinedahan.com">Antoine Dahan</a></p>
+      </footer>
     </div> <!-- /container -->
 
   </body>
@@ -85,6 +97,10 @@
 
   <script>
     $(document).ready(function() {
+      // set copyright year in footer
+      $("#copyright-notice").html(
+        $("#copyright-notice").html() + " " + (new Date()).getFullYear());
+
       var restore_price_style_timeout;
       $("#test-price-move-button").on("click", function() {
         clearTimeout(restore_price_style_timeout);

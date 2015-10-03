@@ -1,0 +1,179 @@
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <link rel="icon" href="../../favicon.ico">
+
+    <title>Narrow Jumbotron Template for Bootstrap</title>
+
+    <link href="assets/css/bootstrap.min.css" rel="stylesheet">
+    <link href="assets/css/custom.css" rel="stylesheet">
+  </head>
+
+  <style>
+    
+  </style>
+
+  <body>
+
+    <div class="container">
+      <div class="jumbotron">
+        <div>
+          <select id="symbol-select" class='form-control symbol-dropdown'>
+            <option selected disabled hidden value=''>Select Stock Symbol</option>
+            <option value="AAPL">AAPL</option>
+            <option value="GOOG">GOOG</option>
+            <option value="MSFT">MSFT</option>
+            <option value="AMZ">AMZ</option>
+          </select>
+        </div>
+      </div>
+
+      <div id="stock-price-history" class="jumbotron" style="display: none;">
+        <h3 style="text-align: center;"><span id="chart-header-symbol" style="color: #53B981;"></span> Stock Price Past 24 Hours</h3>
+        <div id="chart-one" style="min-width: 310px; height: 400px; margin: 0 auto; padding-bottom: 10px;"></div>
+      </div>
+
+      <div id="prediction-sentence" class="jumbotron" style="display: none;">
+        <p style="font-size: 200%; margin-left: 0px; color: #53B981;">
+            <span style="font-size: 130%;">I predict</span> <span id="selected-symbol" style="background-color: black; color: #FFCC00; padding: 4px; border-radius: 4px;">AAPL</span> <span style="font-size: 130%;">will</span> 
+            <select>
+              <option>reach above</option>
+              <option>sink below</option>
+              <option>stay above</option>
+              <option>stay below</option>
+            </select>
+            $<input type="number" style="width: 100px;" min="0" max="100.00"> <span style="font-size: 130%;">by</span> <input type="time"> <span style="font-size: 130%;">on</span>
+            <select>
+              <option>May</option>
+              <option>June</option>
+            </select>
+            <input type="number" style="width: 50px;" min="1" max="31">
+            <input type="number" style="width: 70px;" min="2015" max="2016">
+        </p>
+      </div>
+      <footer style="display: none;" class="row">
+        <hr>
+        <p class="col-lg-6">
+          <span style="background-color: #53B981;" class="badge">
+            <a style="color: white;" href="/.">Home</a></span>
+          </span>
+          <span style="background-color: #53B981;" class="badge">
+            <a style="color: white;" href="create">Create</a></span>
+          </span>
+        </p>
+        <p class="col-lg-6" id="copyright-notice">&copy; <a class="a-custom" href="http://www.antoinedahan.com">Antoine Dahan</a></p>
+      </footer>
+    </div> <!-- /container -->
+
+
+  </body>
+
+  <script src="assets/js/jquery-1.11.3.min.js"></script>
+  <script src="http://code.highcharts.com/highcharts.js"></script>
+  <script src="http://code.highcharts.com/modules/exporting.js"></script>
+
+  <script>
+    $(document).ready(function() {
+
+      $("#symbol-select").on("change", function() {
+        $("#selected-symbol").html($("#symbol-select").val());
+        $("#chart-header-symbol").html($("#symbol-select").val());
+        $("#stock-price-history").show();
+        $("#prediction-sentence").show();
+
+        $('#chart-one').highcharts({
+          chart: {
+            zoomType: 'xy'
+          },
+          colors: ['#53B981'],
+          title: {
+              text: ''
+          },
+          subtitle: {
+              text: ''
+          },
+          exporting: { 
+            enabled: false 
+          },
+          xAxis: [{
+              categories: stockPriceTimes,
+              crosshair: true,
+              title: {
+                  text: '<br/>Date and Time (EST)',
+                  style: {
+                      color: '#333A45'
+                  }
+              },
+              labels: {
+                enabled: false
+              }
+          }],
+          yAxis: [{ // Primary yAxis
+            min: Math.min.apply(Math,stockPrices),
+            gridLineWidth: 0,
+              title: {
+                  text: 'Price ($)',
+                  style: {
+                      color: '#333A45'
+                  }
+              },
+              labels: {
+                  format: '{value}',
+                  style: {
+                      color: '#333A45'
+                  }
+              }
+          }],
+          legend: {
+              shared: true,
+              enabled: false
+          },
+          series: [{
+              name: 'Price',
+              yAxis: 0,
+              data: stockPrices,
+              tooltip: {
+                  valuePrefix: '$'
+              }
+          }]
+        });
+        
+        $($('body').find("text")[$('body').find("text").length-1]).html("");
+        
+        // show the footer and set copyright year in footer
+        $($("footer")[0]).show();
+        $("#copyright-notice").html(
+          $("#copyright-notice").html() + " " + (new Date()).getFullYear());
+      });
+
+      var restore_price_style_timeout;
+      $("#test-price-move-button").on("click", function() {
+        clearTimeout(restore_price_style_timeout);
+        $("#current-price").addClass("price-move-blink");
+        restore_price_style_timeout = setTimeout(function() { 
+          $("#current-price").removeClass("price-move-blink");
+        }, 800);
+      });
+
+      // draw the price graph
+      var stockPriceTimes = ['9/28 12:00am', '9/28 1:00am', '9/28 2:00am', '9/28 3:00am', '9/28 4:00am', '9/28 5:00am', '9/28 6:00am', '9/28 7:00am', '9/28 8:00am', '9/28 9:00am', '9/28 10:00am', '9/28 11:00am', '9/28 12:00pm', '9/28 1:00pm', '9/28 2:00pm', '9/28 3:00pm', '9/28 4:00pm', '9/28 5:00pm', '9/28 6:00pm', '9/28 7:00pm', '9/28 8:00pm', '9/28 9:00pm', '9/28 10:00pm', '9/28 11:00pm'];
+
+      var stockPrices = [189.22, 189.22, 189.22, 189.22, 189.22,189.22, 189.22, 189.22, 189.22, 189.22, 189.28, 189.42, 189.62, 189.12, 188.92, 189.99, 189.67, 188.77, 188.77, 188.77, 188.77, 188.77, 188.77, 188.77];
+    });
+  </script>
+
+  <script>
+    // Remove the highcharts.com label
+    /*setTimeout(function(){
+      $($('body').find("text")[$('body').find("text").length-1]).html("");
+    }, 100);*/
+  </script>
+</html>
+
