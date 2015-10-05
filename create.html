@@ -93,67 +93,14 @@
       $("#symbol-select").on("change", function() {
         $("#selected-symbol").html($("#symbol-select").val());
         $("#chart-header-symbol").html($("#symbol-select").val());
+
+        var stockHistoryToday;
+        var nowTime = parseInt((new Date).getTime()/1000);
+        var yesterdayTime = parseInt((new Date).getTime()/1000);
+        populatePriceHistoryGraph($("#symbol-select").val(), nowTime, yesterdayTime);
+
         $("#stock-price-history").show();
         $("#prediction-sentence").show();
-
-        $('#chart-one').highcharts({
-          chart: {
-            zoomType: 'xy'
-          },
-          colors: ['#53B981'],
-          title: {
-              text: ''
-          },
-          subtitle: {
-              text: ''
-          },
-          exporting: { 
-            enabled: false 
-          },
-          xAxis: [{
-              categories: stockPriceTimes,
-              crosshair: true,
-              title: {
-                  text: '<br/>Date and Time (EST)',
-                  style: {
-                      color: '#333A45'
-                  }
-              },
-              labels: {
-                enabled: false
-              }
-          }],
-          yAxis: [{ // Primary yAxis
-            min: Math.min.apply(Math,stockPrices),
-            gridLineWidth: 0,
-              title: {
-                  text: 'Price ($)',
-                  style: {
-                      color: '#333A45'
-                  }
-              },
-              labels: {
-                  format: '{value}',
-                  style: {
-                      color: '#333A45'
-                  }
-              }
-          }],
-          legend: {
-              shared: true,
-              enabled: false
-          },
-          series: [{
-              name: 'Price',
-              yAxis: 0,
-              data: stockPrices,
-              tooltip: {
-                  valuePrefix: '$'
-              }
-          }]
-        });
-        
-        $($('body').find("text")[$('body').find("text").length-1]).html("");
         
         // show the footer and set copyright year in footer
         $($("footer")[0]).show();
@@ -187,7 +134,7 @@
             stocksInfoData.sort(function(stockA, stockB) {
               return stockA.symbol.localeCompare(stockB.symbol);
             });
-            // Clear the dropdown
+            // clear the dropdown
             $("#symbol-select").html("");
             // append the default option to the symbol select
             var defaultOption = $("<option selected disabled hidden value=''>Select Stock Symbol</option>");
@@ -206,12 +153,97 @@
 
       populateCountriesDropdown();
 
-      
+      /**
+        * Return the price history between [startDateTime, endDateTime]
+        */
+      var populatePriceHistoryGraph = function(symbol, startDateTime, endDateTime) {
+        // create the endpoint GET url with params
+        var stockPricesEndpoint = "http://104.131.219.239:3060/stockprices/";
+        stockPricesEndpoint += "?";
+        stockPricesEndpoint += "start=";
+        stockPricesEndpoint += encodeURIComponent(String(startDateTime).trim());
+        stockPricesEndpoint += "&end=";
+        stockPricesEndpoint += encodeURIComponent(String(endDateTime).trim());
+        console.log(stockPricesEndpoint);
+        // create the request result handler
+        var xmlhttp = new XMLHttpRequest();
+        xmlhttp.open("GET", stockPricesEndpoint, true);
+        xmlhttp.onreadystatechange=function() {
+          // if the status is correct, attempt to parse the response as an object
+          if(xmlhttp.readyState==4 && xmlhttp.status==200) {
+            var rawstockPrices = xmlhttp.responseText;
+            stockPrices = JSON.parse(rawstockPrices);
+            console.log(stockPrices);
+
+            // populate the chart
+            $('#chart-one').highcharts({
+              chart: {
+                zoomType: 'xy'
+              },
+              colors: ['#53B981'],
+              title: {
+                  text: ''
+              },
+              subtitle: {
+                  text: ''
+              },
+              exporting: { 
+                enabled: false 
+              },
+              xAxis: [{
+                  categories: stockHistoryToday.times,
+                  crosshair: true,
+                  title: {
+                      text: '<br/>Date and Time (EST)',
+                      style: {
+                          color: '#333A45'
+                      }
+                  },
+                  labels: {
+                    enabled: false
+                  }
+              }],
+              yAxis: [{ // Primary yAxis
+                min: Math.min.apply(Math,stockHistoryToday.prices),
+                gridLineWidth: 0,
+                  title: {
+                      text: 'Price ($)',
+                      style: {
+                          color: '#333A45'
+                      }
+                  },
+                  labels: {
+                      format: '{value}',
+                      style: {
+                          color: '#333A45'
+                      }
+                  }
+              }],
+              legend: {
+                  shared: true,
+                  enabled: false
+              },
+              series: [{
+                  name: 'Price',
+                  yAxis: 0,
+                  data: stockHistoryToday.prices,
+                  tooltip: {
+                      valuePrefix: '$'
+                  }
+              }]
+            });
+        
+            $($('body').find("text")[$('body').find("text").length-1]).html("");
+          }
+        }
+
+        xmlhttp.send();
+      };
 
       // draw the price graph
-      var stockPriceTimes = ['9/28 12:00am', '9/28 1:00am', '9/28 2:00am', '9/28 3:00am', '9/28 4:00am', '9/28 5:00am', '9/28 6:00am', '9/28 7:00am', '9/28 8:00am', '9/28 9:00am', '9/28 10:00am', '9/28 11:00am', '9/28 12:00pm', '9/28 1:00pm', '9/28 2:00pm', '9/28 3:00pm', '9/28 4:00pm', '9/28 5:00pm', '9/28 6:00pm', '9/28 7:00pm', '9/28 8:00pm', '9/28 9:00pm', '9/28 10:00pm', '9/28 11:00pm'];
+      /*var stockPriceTimes = ['9/28 12:00am', '9/28 1:00am', '9/28 2:00am', '9/28 3:00am', '9/28 4:00am', '9/28 5:00am', '9/28 6:00am', '9/28 7:00am', '9/28 8:00am', '9/28 9:00am', '9/28 10:00am', '9/28 11:00am', '9/28 12:00pm', '9/28 1:00pm', '9/28 2:00pm', '9/28 3:00pm', '9/28 4:00pm', '9/28 5:00pm', '9/28 6:00pm', '9/28 7:00pm', '9/28 8:00pm', '9/28 9:00pm', '9/28 10:00pm', '9/28 11:00pm'];
 
-      var stockPrices = [189.22, 189.22, 189.22, 189.22, 189.22,189.22, 189.22, 189.22, 189.22, 189.22, 189.28, 189.42, 189.62, 189.12, 188.92, 189.99, 189.67, 188.77, 188.77, 188.77, 188.77, 188.77, 188.77, 188.77];
+      var stockPrices = [189.22, 189.22, 189.22, 189.22, 189.22,189.22, 189.22, 189.22, 189.22, 189.22, 189.28, 189.42, 189.62, 189.12, 188.92, 189.99, 189.67, 188.77, 188.77, 188.77, 188.77, 188.77, 188.77, 188.77];*/
     });
   </script>
 
