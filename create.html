@@ -168,7 +168,7 @@
         $('#price-history-chart').highcharts({});
         
         // create the endpoint GET url with params
-        var stockPricesEndpoint = "http://104.131.219.239:3060/stockprices/";
+        var stockPricesEndpoint = "http://104.131.219.239:3060/stockpricehistory/";
         stockPricesEndpoint += "?";
         stockPricesEndpoint += "start=";
         stockPricesEndpoint += encodeURIComponent(String(startDateTime).trim());
