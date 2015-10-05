@@ -6,7 +6,9 @@ var path = require("path");
 
 var mongodb = require('mongodb');
 var mongoClient = mongodb.MongoClient;
-var mongoUrl = 'mongodb://localhost:27017/pennapps';
+var mongoUrl = 'mongodb://localhost:27017/predict';
+
+var schedule = require('node-schedule');
 
 // configuring express to use body-parser as middle-ware.
 app.use(bodyParser.urlencoded({ extended: false }));
@@ -23,44 +25,46 @@ app.get('/create',function(req,res) {
     res.sendFile(path.join(__dirname+"/create.html"));
 });
 
-/* Api Router */
-var getStepsRouter = express.Router();
+schedule.scheduleJob('01 * * * * *', function() {
+    var YQL = require('yql');
+    var queryString = "select * from yahoo.finance.quote where symbol in ('MSFT') "
+    var queryYQL = new YQL(queryString);
 
-getStepsRouter.use(function (req, res, next) {
-    res.json("asked for steps");
-    return;
+    queryYQL.exec(function(err, data) {
+        console.log(data.query.results);
+    });
+
+    console.log("been 1 minutes");
 });
 
-// static files
-//app.use("/css", express.static(__dirname + '/css'));
-app.use("/js", express.static(__dirname + '/js'));
+// Static files
 app.use("/assets", express.static(__dirname + '/assets'));
 
+// the routers
+var stocksInfoRouter = express.Router();
+
 // Registering the routers
-app.use('/steps/', getStepsRouter);
+app.use('/stocksinfo/', stocksInfoRouter);
 
-// Handle http posts
-app.post('/post_step', function(req, res) {
-    res.json("Just posted ");
-
-    mongoClient.connect(mongoUrl, function (mongoError, db) {
-
-        var date = new Date();
-
-        if (!mongoError) {
-            db.collection("steps").insertOne({
-                "date" : getCurrentDateTime(),
-                "steps" : 3
-            });
-
-            console.log("Inseted steps into db");
+stocksInfoRouter.use(function (req, res, next) {
+  mongoClient.connect(mongoUrl, function (mongoError, db) {
+    var stocksCollection = db.collection('stocks');
+    if (!mongoError) {
+      // get all the stock's symbols and names from the table
+      stocksCollection.find().toArray(function (err, result) {
+        // stocks info array (just name and symbol)
+        var stocksInfoArray = Array();
+        for(var i = 0; i < result.length; i++) {
+            stocksInfoArray.push({name: result[i].name, symbol: result[i].symbol});
         }
-
-        else {
-            db.close();
-        }
-    });
+        res.setHeader('Content-Type', 'application/json');
+        res.send(JSON.stringify(stocksInfoArray));
+        db.close();
+      });
+    }
+  });
 });
+
 
 function getCurrentDateTime() {
     var date = new Date();

@@ -10,7 +10,7 @@
     <meta name="author" content="">
     <link rel="icon" href="../../favicon.ico">
 
-    <title>Narrow Jumbotron Template for Bootstrap</title>
+    <title>Stock Predictor</title>
 
     <link href="assets/css/bootstrap.min.css" rel="stylesheet">
     <link href="assets/css/custom.css" rel="stylesheet">
@@ -25,12 +25,12 @@
     <div class="container">
       <div class="jumbotron">
         <div>
-          <select id="symbol-select" class='form-control symbol-dropdown'>
-            <option selected disabled hidden value=''>Select Stock Symbol</option>
+          <!--<option selected disabled hidden value=''>Select Stock Symbol</option>
             <option value="AAPL">AAPL</option>
             <option value="GOOG">GOOG</option>
             <option value="MSFT">MSFT</option>
-            <option value="AMZ">AMZ</option>
+            <option value="AMZ">AMZ</option>-->
+          <select id="symbol-select" class='form-control symbol-dropdown'>
           </select>
         </div>
       </div>
@@ -40,26 +40,31 @@
         <div id="chart-one" style="min-width: 310px; height: 400px; margin: 0 auto; padding-bottom: 10px;"></div>
       </div>
 
-      <div id="prediction-sentence" class="jumbotron" style="display: none;">
-        <p style="font-size: 200%; margin-left: 0px; color: #53B981;">
-            <span style="font-size: 130%;">I predict</span> <span id="selected-symbol" style="background-color: black; color: #FFCC00; padding: 4px; border-radius: 4px;">AAPL</span> <span style="font-size: 130%;">will</span> 
-            <select>
-              <option>reach above</option>
-              <option>sink below</option>
-              <option>stay above</option>
-              <option>stay below</option>
-            </select>
-            $<input type="number" style="width: 100px;" min="0" max="100.00"> <span style="font-size: 130%;">by</span> <input type="time"> <span style="font-size: 130%;">on</span>
-            <select>
-              <option>May</option>
-              <option>June</option>
-            </select>
-            <input type="number" style="width: 50px;" min="1" max="31">
-            <input type="number" style="width: 70px;" min="2015" max="2016">
+      <div id="prediction-sentence" class="jumbotron" style="display: none; font-size: 200%; margin-left: 0px; color: #53B981;">
+        <p>
+          <span style="font-size: 130%;">I predict</span> <span id="selected-symbol" style="background-color: black; color: #FFCC00; padding: 4px; border-radius: 4px;">AAPL</span> <span style="font-size: 130%;">will</span> 
+          <select>
+            <option>reach above</option>
+            <option>sink below</option>
+            <option>stay above</option>
+            <option>stay below</option>
+          </select>
+        </p>
+        <p>
+          $<input type="number" style="width: 100px;" min="0" max="100.00"> <span style="font-size: 130%;">by</span> <input type="time"> <span style="font-size: 130%;">on</span>
+        </p>
+        <p>
+          <select>
+            <option>May</option>
+            <option>June</option>
+          </select>
+          <input type="number" style="width: 50px;" min="1" max="31">
+          <input type="number" style="width: 70px;" min="2015" max="2016">
         </p>
 
         <button id="check-your-predictions-button" href="#predictions-search-section" class="btn btn-lg btn-custom main-button">Create Prediction</button>
       </div>
+
       <footer style="display: none;" class="row">
         <hr>
         <p class="col-lg-6">
@@ -76,8 +81,9 @@
 
 
   </body>
-
+  
   <script src="assets/js/jquery-1.11.3.min.js"></script>
+  <script src="assets/js/bootstrap.min.js"></script>
   <script src="http://code.highcharts.com/highcharts.js"></script>
   <script src="http://code.highcharts.com/modules/exporting.js"></script>
 
@@ -163,6 +169,44 @@
           $("#current-price").removeClass("price-move-blink");
         }, 800);
       });
+
+      /**
+        * Populate the stocks symbol dropdown
+        */
+      var populateCountriesDropdown = function() {
+        // grab the stocks symbols and names
+        var stocksInfoEndpoint = "http://104.131.219.239:3060/stocksinfo/";
+        var xmlhttp = new XMLHttpRequest();
+        xmlhttp.open("GET", stocksInfoEndpoint, true);
+        xmlhttp.onreadystatechange=function() {
+          // if the status is correct, attempt to parse the response as an object
+          if(xmlhttp.readyState==4 && xmlhttp.status==200) {
+            var rawStocksInfoData = xmlhttp.responseText;
+            stocksInfoData = JSON.parse(rawStocksInfoData);
+            // sort the stocks info data array by symbol
+            stocksInfoData.sort(function(stockA, stockB) {
+              return stockA.symbol.localeCompare(stockB.symbol);
+            });
+            // Clear the dropdown
+            $("#symbol-select").html("");
+            // append the default option to the symbol select
+            var defaultOption = $("<option selected disabled hidden value=''>Select Stock Symbol</option>");
+            $("#symbol-select").append(defaultOption);
+            // populate the countries dropdown
+            for(var i = 0; i < stocksInfoData.length; i++) {
+              var stockInfoOption = $("<option></option>");
+              $(stockInfoOption).val(stocksInfoData[i].symbol);
+              $(stockInfoOption).html(stocksInfoData[i].symbol + " " + stocksInfoData[i].name);
+              $("#symbol-select").append(stockInfoOption);
+            }
+          }
+        }
+        xmlhttp.send();
+      };
+
+      populateCountriesDropdown();
+
+      
 
       // draw the price graph
       var stockPriceTimes = ['9/28 12:00am', '9/28 1:00am', '9/28 2:00am', '9/28 3:00am', '9/28 4:00am', '9/28 5:00am', '9/28 6:00am', '9/28 7:00am', '9/28 8:00am', '9/28 9:00am', '9/28 10:00am', '9/28 11:00am', '9/28 12:00pm', '9/28 1:00pm', '9/28 2:00pm', '9/28 3:00pm', '9/28 4:00pm', '9/28 5:00pm', '9/28 6:00pm', '9/28 7:00pm', '9/28 8:00pm', '9/28 9:00pm', '9/28 10:00pm', '9/28 11:00pm'];
