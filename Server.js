@@ -40,12 +40,11 @@ schedule.scheduleJob('01 * * * * *', function() {
 // Static files
 app.use("/assets", express.static(__dirname + '/assets'));
 
-// the routers
+/** 
+  * Stocks info endpoint for getting name and symbol for all stocks in the table
+  */
 var stocksInfoRouter = express.Router();
-
-// Registering the routers
 app.use('/stocksinfo/', stocksInfoRouter);
-
 stocksInfoRouter.use(function (req, res, next) {
   mongoClient.connect(mongoUrl, function (mongoError, db) {
     var stocksCollection = db.collection('stocks');
@@ -65,6 +64,61 @@ stocksInfoRouter.use(function (req, res, next) {
   });
 });
 
+/**
+  * Stocks price history endpoint, get all recorded prices for a specified stock between 
+  * two specified times (epoch format)
+  */
+var stockPriceHistoryRouter = expressRouter();
+app.use('/stockpricehistory/', stockPriceHistoryRouter);
+stockPriceHistoryRouter.use(function (req, res, next) {
+
+    var url = require('url');
+    var url_parts = url.parse(req.originalUrl, true);
+
+    var findQueryObject = {};
+
+    // specify the symbol in the query
+    if (url_parts.query.hasOwnProperty("symbol")) {
+        findQueryObject.symbol = url_parts.query.symbol;
+    }
+
+    // create the time greater than condition (if an start time is specified)
+    if (url_parts.query.hasOwnProperty("start")) {
+        var startTime = parseInt(url_parts.query.start);
+        // create the prices conditional object if it doesn't exist
+        if(!findQueryObject.hasOwnProperty("prices")) {
+            findQueryObject.prices = { $elemMatch: {time: {}}};
+        }
+        // time of price must be gte to the startTime
+        findQueryObject.prices.$elemMatch.time.$gte = startTime;
+    }
+
+    // create the time less than condition (if an end time is specified)
+    if (url_parts.query.hasOwnProperty("end")) {
+        var endTime = parseInt(url_parts.query.end);
+        // create the prices conditional object if it doesn't exist
+        if (!findQueryObject.hasOwnProperty("prices")) {
+            findQueryObject.prices = { $elemMatch: { time: {} } };
+        }
+        // time of price must be gte to the startTime
+        findQueryObject.prices.$elemMatch.time.$lte = endTime;
+    }
+
+    // if the symbol was provided, the grab the prices according to times paramaters
+    if (findQueryObject.hasOwnProperty("symbol") && typeof findQueryObject.symbol != "undefined") {
+        mongoClient.connect(mongoUrl, function (mongoError, db) {
+            var stocksCollection = db.collection('stocks');
+            if (!mongoError) {
+                // get all the stock's symbols and names from the table
+                stocksCollection.find().toArray(function (err, result) {
+                    res.setHeader('Content-Type', 'application/json');
+                    res.send(JSON.stringify(result));
+                    db.close();
+                });
+            }
+        });
+    }
+});
 
 function getCurrentDateTime() {
     var date = new Date();
