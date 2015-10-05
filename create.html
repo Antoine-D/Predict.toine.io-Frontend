@@ -16,10 +16,6 @@
     <link href="assets/css/custom.css" rel="stylesheet">
   </head>
 
-  <style>
-    
-  </style>
-
   <body>
 
     <div class="container">
@@ -31,13 +27,15 @@
             <option value="MSFT">MSFT</option>
             <option value="AMZ">AMZ</option>-->
           <select id="symbol-select" class='form-control symbol-dropdown'>
+              <option>A</option>
+              <option>B</option>
           </select>
         </div>
       </div>
 
       <div id="stock-price-history" class="jumbotron" style="display: none;">
         <h3 style="text-align: center;"><span id="chart-header-symbol" style="color: #53B981;"></span> Stock Price Past 24 Hours</h3>
-        <div id="chart-one" style="min-width: 310px; height: 400px; margin: 0 auto; padding-bottom: 10px;"></div>
+          <div id="price-history-chart" style="min-width: 310px; height: 400px; margin: 0 auto; padding-bottom: 10px;"></div>
       </div>
 
       <div id="prediction-sentence" class="jumbotron" style="display: none; font-size: 200%; margin-left: 0px; color: #53B981;">
@@ -90,22 +88,31 @@
   <script>
     $(document).ready(function() {
 
-      $("#symbol-select").on("change", function() {
-        $("#selected-symbol").html($("#symbol-select").val());
-        $("#chart-header-symbol").html($("#symbol-select").val());
+        $("#symbol-select").on("change", function () {
+            var selectedSymbol = $("#symbol-select").val();
+            $("#selected-symbol").html(selectedSymbol);
+            $("#chart-header-symbol").html($("#symbol-select").val());
 
-        var stockHistoryToday;
-        var nowTime = parseInt((new Date).getTime()/1000);
-        var yesterdayTime = parseInt((new Date).getTime()/1000);
-        populatePriceHistoryGraph($("#symbol-select").val(), nowTime, yesterdayTime);
+            alert(selectedSymbol);
+            if (selectedSymbol == "A") {
+                $('#price-history-chart').highcharts({});
+            }
+            else {
+                fillGraphRandom();
+            }
+            
+            var stockHistoryToday;
+            var nowTime = parseInt((new Date).getTime()/1000);
+            var yesterdayTime = parseInt((new Date).getTime()/1000);
+            populatePriceHistoryGraph($("#symbol-select").val(), nowTime, yesterdayTime);
 
-        $("#stock-price-history").show();
-        $("#prediction-sentence").show();
+            $("#stock-price-history").show();
+            $("#prediction-sentence").show();
         
-        // show the footer and set copyright year in footer
-        $($("footer")[0]).show();
-        $("#copyright-notice").html(
-          $("#copyright-notice").html() + " " + (new Date()).getFullYear());
+            // show the footer and set copyright year in footer
+            $($("footer")[0]).show();
+            $("#copyright-notice").html(
+                $("#copyright-notice").html() + " " + (new Date()).getFullYear());
       });
 
       var restore_price_style_timeout;
@@ -120,7 +127,7 @@
       /**
         * Populate the stocks symbol dropdown
         */
-      var populateCountriesDropdown = function() {
+      var populateSymbolsDropdown = function () {
         // grab the stocks symbols and names
         var stocksInfoEndpoint = "http://104.131.219.239:3060/stocksinfo/";
         var xmlhttp = new XMLHttpRequest();
@@ -151,12 +158,15 @@
         xmlhttp.send();
       };
 
-      populateCountriesDropdown();
+      //populateSymbolsDropdown();
 
       /**
         * Return the price history between [startDateTime, endDateTime]
         */
-      var populatePriceHistoryGraph = function(symbol, startDateTime, endDateTime) {
+      var populatePriceHistoryGraph = function (symbol, startDateTime, endDateTime) {
+        // clear the graph
+        $('#price-history-chart').highcharts({});
+        
         // create the endpoint GET url with params
         var stockPricesEndpoint = "http://104.131.219.239:3060/stockprices/";
         stockPricesEndpoint += "?";
@@ -171,14 +181,29 @@
         xmlhttp.onreadystatechange=function() {
           // if the status is correct, attempt to parse the response as an object
           if(xmlhttp.readyState==4 && xmlhttp.status==200) {
-            var rawstockPrices = xmlhttp.responseText;
-            stockPrices = JSON.parse(rawstockPrices);
-            console.log(stockPrices);
+              var rawstockPriceHistory = xmlhttp.responseText;
+              stockPriceHistory = JSON.parse(rawstockPriceHistory);
+              console.log(stockPriceHistory);
+              // create seperate lists for prices and dates
+              var prices = Array();
+              var times = Array(); // epoch times
+              for (var i = 0; i < stockPriceHistory.length; i++) {
+                  prices.push(stockPriceHistory[i].price);
+                  times.push(stockPriceHistory[i].time);
+              }
+              // draw the graph using the times (x-axis) and prices (y-axis)
+              drawPriceGraph(times, prices);
+          }
+        }
 
-            // populate the chart
-            $('#chart-one').highcharts({
+        xmlhttp.send();
+      };
+
+      var drawPriceGraph = function (times, prices) {
+          // populate the chart
+          $('#stock-price-history').highcharts({
               chart: {
-                zoomType: 'xy'
+                  zoomType: 'xy'
               },
               colors: ['#53B981'],
               title: {
@@ -187,11 +212,11 @@
               subtitle: {
                   text: ''
               },
-              exporting: { 
-                enabled: false 
+              exporting: {
+                  enabled: false
               },
               xAxis: [{
-                  categories: stockHistoryToday.times,
+                  categories: times,
                   crosshair: true,
                   title: {
                       text: '<br/>Date and Time (EST)',
@@ -200,12 +225,12 @@
                       }
                   },
                   labels: {
-                    enabled: false
+                      enabled: false
                   }
               }],
-              yAxis: [{ // Primary yAxis
-                min: Math.min.apply(Math,stockHistoryToday.prices),
-                gridLineWidth: 0,
+              yAxis: [{
+                  min: Math.min.apply(Math, stockHistoryToday.prices),
+                  gridLineWidth: 0,
                   title: {
                       text: 'Price ($)',
                       style: {
@@ -226,32 +251,17 @@
               series: [{
                   name: 'Price',
                   yAxis: 0,
-                  data: stockHistoryToday.prices,
+                  data: prices,
                   tooltip: {
                       valuePrefix: '$'
                   }
               }]
-            });
-        
-            $($('body').find("text")[$('body').find("text").length-1]).html("");
-          }
-        }
+          });
 
-        xmlhttp.send();
-      };
-
-      // draw the price graph
-      /*var stockPriceTimes = ['9/28 12:00am', '9/28 1:00am', '9/28 2:00am', '9/28 3:00am', '9/28 4:00am', '9/28 5:00am', '9/28 6:00am', '9/28 7:00am', '9/28 8:00am', '9/28 9:00am', '9/28 10:00am', '9/28 11:00am', '9/28 12:00pm', '9/28 1:00pm', '9/28 2:00pm', '9/28 3:00pm', '9/28 4:00pm', '9/28 5:00pm', '9/28 6:00pm', '9/28 7:00pm', '9/28 8:00pm', '9/28 9:00pm', '9/28 10:00pm', '9/28 11:00pm'];
-
-      var stockPrices = [189.22, 189.22, 189.22, 189.22, 189.22,189.22, 189.22, 189.22, 189.22, 189.22, 189.28, 189.42, 189.62, 189.12, 188.92, 189.99, 189.67, 188.77, 188.77, 188.77, 188.77, 188.77, 188.77, 188.77];*/
+          // clear highcharts graph footer
+          $($('body').find("text")[$('body').find("text").length - 1]).html("");  
+      }
     });
-  </script>
-
-  <script>
-    // Remove the highcharts.com label
-    /*setTimeout(function(){
-      $($('body').find("text")[$('body').find("text").length-1]).html("");
-    }, 100);*/
   </script>
 </html>
 
