@@ -25,6 +25,14 @@ app.get('/create',function(req,res) {
     res.sendFile(path.join(__dirname+"/create.html"));
 });
 
+app.get('/predictor',function(req,res) {
+    res.sendFile(path.join(__dirname+"/predictor.html"));
+});
+
+app.get('/prediction',function(req,res) {
+    res.sendFile(path.join(__dirname+"/prediction.html"));
+});
+
 schedule.scheduleJob('01 * * * * *', function() {
     var YQL = require('yql');
     var queryString = "select * from yahoo.finance.quote where symbol in ('AAPL') "
@@ -141,6 +149,202 @@ stockPriceHistoryRouter.use(function (req, res, next) {
                 });
             }
         });
+    }
+});
+
+/**
+  * Makes sure the string only consists of alphanumerical characters and spaces
+  */
+var isAlphanumericalPlusSpaces = function(stringToCheck) {
+    for (var i = 0; i < stringToCheck.length; i++) {
+        if ((stringToCheck[i] >= 'a' && stringToCheck[i] <= 'z') ||
+            (stringToCheck[i] >= 'A' && stringToCheck[i] <= 'Z') ||
+            (stringToCheck[i] >= '0' && stringToCheck[i] <= '9') ||
+            (stringToCheck[i].charCodeAt(0) == 32)) {
+            continue;
+        }
+        else { // it's not a (lower/upper) character, digit, or space
+            return false;
+        }
+    }
+    // reached here --> so is valid alphanumeric plus spaces
+    return true;
+}
+
+/**
+  * Hash function
+  */
+var hash = function (stringToHash) {
+    var resultString = "";
+    for (var i = 0; i < stringToHash.length; i++) {
+        var randomNumberRanges = [[42, 47], [58, 64], [91, 99]]
+        if (stringToHash[i] == " ") {
+            var randomNumberRangeIndex = Math.floor(Math.random() * 3);
+            var randomNumberRange = randomNumberRanges[randomNumberRangeIndex];
+            var rangeDifference = randomNumberRange[1] - randomNumberRange[0];
+            var resultInteger = Math.floor(Math.random() * (rangeDifference + 1)) + randomNumberRange[0];
+            resultString += resultInteger.toString(16);
+        }
+        else {
+            var charCode = stringToHash.charCodeAt(i);
+            // if character is a lowercase letter, then add 5 to the charCode and mod it with 100
+            if ((stringToHash[i] < '0' || stringToHash[i] > '9') && stringToHash[i].toLowerCase() == stringToHash[i]) {
+                charCode = (charCode + 19) % 100;
+            }
+            resultString += charCode.toString(16);
+        }
+    }
+
+    // convert the integer string to hex string
+    //resultString = parseInt(resultString).toString(16);
+
+    return resultString;
+}
+
+/**
+  * Un-Hash function
+  */
+var unhash = function (hashedString) {
+    // convert the hex string to decimal string
+    //hashedString = parseInt(hashedString, 16).toString();
+
+
+    var resultString = "";
+    for (var i = 0; i < hashedString.length - 1; i+=2) {
+        var thisCharCode = parseInt(hashedString[i] + hashedString[i + 1], 16);
+        var thisCharacter;
+        if ((thisCharCode >= 42 && thisCharCode <= 47) ||
+            (thisCharCode >= 58 && thisCharCode <= 64) ||
+            (thisCharCode >= 91 && thisCharCode <= 99)) {
+            thisCharacter = " ";
+        }
+        else {
+            if (thisCharCode >= 16 && thisCharCode <= 41) {
+                thisCharacter = String.fromCharCode((thisCharCode + 100) - 19);
+            }
+            else {
+                thisCharacter = String.fromCharCode(thisCharCode);
+            }
+        }
+
+        resultString += thisCharacter;
+    }
+
+    return resultString;
+}
+
+/**
+  * Owner's predictions page url endpoint. Used to get the url of the owner's prediction page 
+  * given the owner's string.
+  */
+var usersPredictionsPageUrlRouter = express.Router();
+app.use('/creatorpageurl', usersPredictionsPageUrlRouter);
+usersPredictionsPageUrlRouter.use(function (req, res, next) {
+    var url = require('url');
+    var url_parts = url.parse(req.originalUrl, true);
+
+    // specify the symbol in the query
+    if (url_parts.query.hasOwnProperty("creator") && typeof url_parts.query.creator != "undefined") {
+        var creator = url_parts.query.creator;
+        var hashedOwnerString = hash(creator);
+
+        res.setHeader('Content-Type', 'application/json');
+        res.send(JSON.stringify({creator: hashedOwnerString}));
+    }
+
+    else {
+        res.setHeader('Content-Type', 'application/json');
+        res.send(JSON.stringify("Unprovided paramaters: creator"));
+    }
+});
+
+/**
+  * User's prediction's endpoint (get all predictions assosiated with that user)
+  * responds with json of all the user's predictions
+  */
+var preditionsDataRouter = express.Router();
+app.use('/getpredictions', preditionsDataRouter);
+preditionsDataRouter.use(function (req, res, next) {
+    var url = require('url');
+    var url_parts = url.parse(req.originalUrl, true);
+
+    // specify the symbol in the query
+    if (url_parts.query.hasOwnProperty("creator") && typeof url_parts.query.creator != "undefined") {
+        var hashedCreatorString = url_parts.query.creator;
+        var creatorString = unhash(hashedCreatorString);
+
+        console.log("Unhashed: " + creatorString);
+        mongoClient.connect(mongoUrl, function (mongoError, db) {
+
+            if(!mongoError) {
+                // get all the stock's symbols and names from the table
+                db.collection('predictions').find({ creator: creatorString }).toArray(function (err, result) {
+                    res.setHeader('Content-Type', 'application/json');
+                    res.send(JSON.stringify(result));
+                    db.close();
+                });
+            }
+        });
+    }
+
+    else
+    {
+        res.setHeader('Content-Type', 'application/json');
+        res.send(JSON.stringify("Unprovided paramaters: creator"));
+    }
+});
+
+
+/**
+  * Insert a prediction into the predictions collection
+  */
+var insertPrediction = function (db, requestBody, callback) {
+    db.collection('predictions').insertOne({
+        "creator": requestBody["creator"],
+        "type": requestBody["type"],
+        "object": requestBody["object"],
+        "metric": requestBody["metric"],
+        "action": requestBody["action"],
+        "start": requestBody["start"],
+        "end": requestBody["end"]
+
+    }, function (err, result) {
+        assert.equal(err, null);
+        console.log("Inserted a prediction");
+        callback(result);
+    });
+};
+
+
+/**
+  * Receive prediction creation posts and insert them in the collection
+  */
+app.post('/createprediction', function (req, res) {
+    // Make sure all of the required fields are in the request body and the 
+    // creator string consists only of alphanumerics and spaces, and that 
+    // the creator string length is less than 1000 characters.
+    if (req.body != null
+        && "creator" in req.body
+        && isAlphanumericalPlusSpaces(req.body)
+        && req.body["creator"].length < 1000
+        && "type" in req.body
+        && "start" in req.body
+        && "end" in req.body
+        && "object" in req.body
+        && "metric" in req.body
+        && "action" in req.body) {
+
+        // insert the prediction
+        mongoClient.connect(mongoUrl, function (mongoError, db) {
+            assert.equal(null, mongoError);
+            insertPrediction(db, req.body, function () {
+                db.close();
+            });
+        });    
+    }
+    // some or all of the required fields were not present
+    else {
+        console.log("Missing things from the post request.");
     }
 });
 
