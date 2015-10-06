@@ -27,11 +27,34 @@ app.get('/create',function(req,res) {
 
 schedule.scheduleJob('01 * * * * *', function() {
     var YQL = require('yql');
-    var queryString = "select * from yahoo.finance.quote where symbol in ('MSFT') "
+    var queryString = "select * from yahoo.finance.quote where symbol in ('AAPL') "
     var queryYQL = new YQL(queryString);
 
     queryYQL.exec(function(err, data) {
         console.log(data.query.results);
+        //store the price
+        var currentTime = Math.floor(new Date()/1000);
+
+        mongoClient.connect(mongoUrl, function (mongoError, db) {
+            var stocksCollection = db.collection('stocks');
+            if (!mongoError) {
+              // get all the stock's symbols and names from the table
+              stocksCollection.updateOne(
+                { symbol: "AAPL" },
+                { $push: {
+                    prices: {
+                        $each: [{
+                            price: data.query.results.quote.LastTradePriceOnly, 
+                            time: currentTime} 
+                        ] 
+                    } 
+                }},
+                function(err, results) {
+                    console.log(results);
+                    db.close();
+                });
+            }
+        });
     });
 
     console.log("been 1 minutes");
@@ -68,7 +91,7 @@ stocksInfoRouter.use(function (req, res, next) {
   * Stocks price history endpoint, get all recorded prices for a specified stock between 
   * two specified times (epoch format)
   */
-var stockPriceHistoryRouter = expressRouter();
+var stockPriceHistoryRouter = express.Router();
 app.use('/stockpricehistory/', stockPriceHistoryRouter);
 stockPriceHistoryRouter.use(function (req, res, next) {
 
@@ -104,6 +127,7 @@ stockPriceHistoryRouter.use(function (req, res, next) {
         findQueryObject.prices.$elemMatch.time.$lte = endTime;
     }
 
+    console.log(findQueryObject);
     // if the symbol was provided, the grab the prices according to times paramaters
     if (findQueryObject.hasOwnProperty("symbol") && typeof findQueryObject.symbol != "undefined") {
         mongoClient.connect(mongoUrl, function (mongoError, db) {
