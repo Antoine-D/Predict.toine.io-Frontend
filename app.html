@@ -18,8 +18,58 @@
 
   <body>
 
-    <div class="container">
+    <style>
+        .prediction-result {
+            color: #286090;
+        }
 
+        .prediction-result h4 {
+            text-align: left;
+        }
+
+        .prediction-true {
+            color: #53B981;
+        }
+        .prediction-false {
+            color: red;
+        }
+        
+
+
+
+    </style>
+    <div class="container">
+      <div class="jumbotron">
+        <div class="prediction-result">
+            <h2>Prediction is still valid.</h2>
+            <h4>Last checked on 10/8/2015 at 9:36am when the price was $92.77. Prediction's endtime is on 10/8/2015 at 4:55pm.</h4>
+        </div>
+        <div class="prediction-result prediction-false">
+            <h2>Prediction proved false.</h2>
+            <h4>AAPL price didn't reach above $100.00 by the end time of the prediction. The last price check was on 10/8/2015 at 4:55pm when the price was $99.87.</h4>
+        </div>
+        <div class="prediction-result prediction-true">
+            <h2>Prediction proved true.</h2>
+            <h4>AAPL price reached above $100.00 before the end time of the prediction. The last price check was on 10/8/2015 at 11:55am when the price was $100.87.</h4>
+        </div>
+        <!-- Failure messages (metric is 100.00):
+                reach above: AAPL price didn't reach above $100.00 by the end time of the prediction. The last price check was on 10/8/2015 at 4:55pm when the price was $99.87.
+                sink bellow: AAPL price didn't sink below $100.00 by the end time of the prediction. The last price check was on 10/8/2015 at 4:55pm when the price was $102.87.
+                stay above: AAPL price failed to stay above $100.00 by the end of the prediction. The failure occured on 10/8/2015 at 12:22pm when the price was $99.87.
+                stay below: AAPL price failed to stay below $100.00 by the end of the prediction. The failure occured on 10/8/2015 at 12:22pm when the price was $100.32. 
+                
+                possible after failure messages for the "stay predictions": 
+                The stock then sunk further to $94.33 by 2:49pm but rose again to finish the day at $99.44.
+                The stock then sunk further and ended the day at $94.33.
+                The stock quickly rebounded and finished the day at $108.77.
+
+             True Messages (metric is 100.00):
+                reach above: AAPL price reached above $100.00 before the end time of the prediction. The last price check was on 10/8/2015 at 11:55am when the price was $100.87.
+                sink bellow: AAPL price sunk below $100.00 before the end time of the prediction. The last price check was on 10/8/2015 at 9:44am when the price was $99.97.
+                stay above: AAPL price stayed above $100.00 until the end of the prediction timeframe. The last price check was on 10/8/2015 at 4:55pm when the price was $100.87.
+                stay below: AAPL price stayed below $100.00 until the end of the prediction timeframe. The last price check was on 10/8/2015 at 2:55pm when the price was $99.97. 
+        -->
+      </div>
       <div class="jumbotron">
         <h2 style="font-weight: bold;">Apple Inc. <span class="symbol">AAPL</span></h2>
         <p style="color: #333A45; font-size: 100%;">
