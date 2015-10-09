@@ -17,10 +17,6 @@ app.get('/',function(req,res) {
     res.sendFile(path.join(__dirname+"/index.html"));
 });
 
-app.get('/app',function(req,res) {
-    res.sendFile(path.join(__dirname+"/app.html"));
-});
-
 app.get('/create',function(req,res) {
     res.sendFile(path.join(__dirname+"/create.html"));
 });
