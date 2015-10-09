@@ -67,226 +67,216 @@ schedule.scheduleJob('01 * * * * *', function() {
 // Static files
 app.use("/assets", express.static(__dirname + '/assets'));
 
+// predictions
+var prediction = { predictor_id: "507f1f77bcf86cd799439011", type: "stock", object: "AAPL", value: 101.10, action: "rise above", start: 1444000001, end: 1444100000 };
+
+// predictors
+var predictor = { predictor: "anemail@gmail.com"}
+
+// objects' values
+var object = { type: "stock", object: "AAPL", values: [{ time: 1444000001, value: 9.77 }, { time: 1444000061, value: 9.72 }] }
+
+
 /** 
-  * Stocks info endpoint for getting name and symbol for all stocks in the table
+  * Get all objects of the given type
   */
-var stocksInfoRouter = express.Router();
-app.use('/stocksinfo', stocksInfoRouter);
-stocksInfoRouter.use(function (req, res, next) {
-  mongoClient.connect(mongoUrl, function (mongoError, db) {
-    var stocksCollection = db.collection('stocks');
-    if (!mongoError) {
-      // get all the stock's symbols and names from the table
-      stocksCollection.find().toArray(function (err, result) {
-        // stocks info array (just name and symbol)
-        var stocksInfoArray = Array();
-        for(var i = 0; i < result.length; i++) {
-            stocksInfoArray.push({name: result[i].name, symbol: result[i].symbol});
-        }
-        res.setHeader('Content-Type', 'application/json');
-        res.send(JSON.stringify(stocksInfoArray));
-        db.close();
-      });
-    }
-  });
-});
-
-/**
-  * Stocks price history endpoint, get all recorded prices for a specified stock between 
-  * two specified times (epoch format)
-  */
-var stockPriceHistoryRouter = express.Router();
-app.use('/stockpricehistory', stockPriceHistoryRouter);
-stockPriceHistoryRouter.use(function (req, res, next) {
-
+var objectsRouter = express.Router();
+app.use('/objects', objectsRouter);
+objectsRouter.use(function (req, res, next) {
     var url = require('url');
     var url_parts = url.parse(req.originalUrl, true);
 
+    var queryOptions = {};
     var findQueryObject = {};
 
-    // specify the symbol in the query
-    if (url_parts.query.hasOwnProperty("symbol")) {
-        findQueryObject.symbol = url_parts.query.symbol;
+    var paramatersValid = false;
+    var includeObjectValues = false;
+
+    // grab the "type" paramater from the GET request
+    if (url_parts.query.hasOwnProperty("type")) {
+        findQueryObject.type = url_parts.query.type;
+        paramatersValid = true;
     }
 
-    // create the time greater than condition (if an start time is specified)
+    if (url_parts.query.hasOwnProperty("object")) {
+        findQueryObject.object = url_parts.query.object;
+    }
+
     if (url_parts.query.hasOwnProperty("start")) {
-        var startTime = parseInt(url_parts.query.start);
-        // create the prices conditional object if it doesn't exist
-        if(!findQueryObject.hasOwnProperty("prices")) {
-            findQueryObject.prices = { $elemMatch: {time: {}}};
-        }
-        // time of price must be gte to the startTime
-        findQueryObject.prices.$elemMatch.time.$gte = startTime;
+        findQueryObject.start = url_parts.query.start;
     }
 
-    // create the time less than condition (if an end time is specified)
     if (url_parts.query.hasOwnProperty("end")) {
-        var endTime = parseInt(url_parts.query.end);
-        // create the prices conditional object if it doesn't exist
-        if (!findQueryObject.hasOwnProperty("prices")) {
-            findQueryObject.prices = { $elemMatch: { time: {} } };
-        }
-        // time of price must be gte to the startTime
-        findQueryObject.prices.$elemMatch.time.$lte = endTime;
+        findQueryObject.end = url_parts.query.end;
     }
 
-    console.log(findQueryObject);
-    // if the symbol was provided, the grab the prices according to times paramaters
-    if (findQueryObject.hasOwnProperty("symbol") && typeof findQueryObject.symbol != "undefined") {
+    if (url_parts.query.hasOwnProperty("includeValues") 
+        && url_parts.query.includeValues.toLowerCase() == "y") {
+        includeObjectValues = true;
+    }
+
+    if (paramatersValid) {
         mongoClient.connect(mongoUrl, function (mongoError, db) {
-            var stocksCollection = db.collection('stocks');
-            if (!mongoError) {
-                // get all the stock's symbols and names from the table
-                stocksCollection.find().toArray(function (err, result) {
-                    res.setHeader('Content-Type', 'application/json');
-                    res.send(JSON.stringify(result));
-                    db.close();
-                });
-            }
-        });
-    }
-});
 
-/**
-  * Makes sure the string only consists of alphanumerical characters and spaces
-  */
-var isAlphanumericalPlusSpaces = function(stringToCheck) {
-    for (var i = 0; i < stringToCheck.length; i++) {
-        if ((stringToCheck[i] >= 'a' && stringToCheck[i] <= 'z') ||
-            (stringToCheck[i] >= 'A' && stringToCheck[i] <= 'Z') ||
-            (stringToCheck[i] >= '0' && stringToCheck[i] <= '9') ||
-            (stringToCheck[i].charCodeAt(0) == 32)) {
-            continue;
+        var objectsCollection = db.collection('objects');
+        if (!mongoError) {
+
+            objectsCollection.find(findQueryObject).toArray(function (err, result) {
+                // grab the objects from the table
+                var objectsArray = Array();
+                for(var i = 0; i < result.length; i++) {
+                    if(includeObjectValues) {
+                        objectsArray.push({object: result[i].object});
+                    }
+                    else {
+                        objectsArray.push({object: result[i].object, values: result[i].values});
+                    }
+                }
+
+                res.setHeader('Content-Type', 'application/json');
+                res.send(JSON.stringify(objectsArray));
+                db.close();
+            });
         }
-        else { // it's not a (lower/upper) character, digit, or space
-            return false;
-        }
-    }
-    // reached here --> so is valid alphanumeric plus spaces
-    return true;
-}
-
-/**
-  * Hash function
-  */
-var hash = function (stringToHash) {
-    var resultString = "";
-    for (var i = 0; i < stringToHash.length; i++) {
-        var randomNumberRanges = [[42, 47], [58, 64], [91, 99]]
-        if (stringToHash[i] == " ") {
-            var randomNumberRangeIndex = Math.floor(Math.random() * 3);
-            var randomNumberRange = randomNumberRanges[randomNumberRangeIndex];
-            var rangeDifference = randomNumberRange[1] - randomNumberRange[0];
-            var resultInteger = Math.floor(Math.random() * (rangeDifference + 1)) + randomNumberRange[0];
-            resultString += resultInteger.toString(16);
-        }
-        else {
-            var charCode = stringToHash.charCodeAt(i);
-            // if character is a lowercase letter, then add 5 to the charCode and mod it with 100
-            if ((stringToHash[i] < '0' || stringToHash[i] > '9') && stringToHash[i].toLowerCase() == stringToHash[i]) {
-                charCode = (charCode + 19) % 100;
-            }
-            resultString += charCode.toString(16);
-        }
-    }
-
-    // convert the integer string to hex string
-    //resultString = parseInt(resultString).toString(16);
-
-    return resultString;
-}
-
-/**
-  * Un-Hash function
-  */
-var unhash = function (hashedString) {
-    // convert the hex string to decimal string
-    //hashedString = parseInt(hashedString, 16).toString();
-
-
-    var resultString = "";
-    for (var i = 0; i < hashedString.length - 1; i+=2) {
-        var thisCharCode = parseInt(hashedString[i] + hashedString[i + 1], 16);
-        var thisCharacter;
-        if ((thisCharCode >= 42 && thisCharCode <= 47) ||
-            (thisCharCode >= 58 && thisCharCode <= 64) ||
-            (thisCharCode >= 91 && thisCharCode <= 99)) {
-            thisCharacter = " ";
-        }
-        else {
-            if (thisCharCode >= 16 && thisCharCode <= 41) {
-                thisCharacter = String.fromCharCode((thisCharCode + 100) - 19);
-            }
-            else {
-                thisCharacter = String.fromCharCode(thisCharCode);
-            }
-        }
-
-        resultString += thisCharacter;
-    }
-
-    return resultString;
-}
-
-/**
-  * Owner's predictions page url endpoint. Used to get the url of the owner's prediction page 
-  * given the owner's string.
-  */
-var usersPredictionsPageUrlRouter = express.Router();
-app.use('/creatorpageurl', usersPredictionsPageUrlRouter);
-usersPredictionsPageUrlRouter.use(function (req, res, next) {
-    var url = require('url');
-    var url_parts = url.parse(req.originalUrl, true);
-
-    // specify the symbol in the query
-    if (url_parts.query.hasOwnProperty("creator") && typeof url_parts.query.creator != "undefined") {
-        var creator = url_parts.query.creator;
-        var hashedOwnerString = hash(creator);
-
-        res.setHeader('Content-Type', 'application/json');
-        res.send(JSON.stringify({creator: hashedOwnerString}));
+      });
     }
 
     else {
         res.setHeader('Content-Type', 'application/json');
-        res.send(JSON.stringify("Unprovided paramaters: creator"));
+        res.send(JSON.stringify({ status: "failed", reason: "Required paramaters are missing."}));
     }
 });
 
-/**
-  * User's prediction's endpoint (get all predictions assosiated with that user)
-  * responds with json of all the user's predictions
+/** 
+  * Predictions router
   */
-var preditionsDataRouter = express.Router();
-app.use('/getpredictions', preditionsDataRouter);
-preditionsDataRouter.use(function (req, res, next) {
+var predictionsRouter = express.Router();
+app.use('/predictions', predictionsRouter);
+predictionsRouter.use(function (req, res, next) {
     var url = require('url');
     var url_parts = url.parse(req.originalUrl, true);
 
-    // specify the symbol in the query
-    if (url_parts.query.hasOwnProperty("creator") && typeof url_parts.query.creator != "undefined") {
-        var hashedCreatorString = url_parts.query.creator;
-        var creatorString = unhash(hashedCreatorString);
+    var queryOptions = {};
+    var findQueryObject = {};
 
-        //console.log("Unhashed: " + creatorString);
+    var paramatersValid = false;
+
+    // grab the "id" paramater from the GET request
+    if (url_parts.query.hasOwnProperty("id")) {
+        findQueryObject.id = url_parts.query.id;
+        paramatersValid = true;
+    }
+
+    // grab the "predictor" paramater from the GET request
+    if (url_parts.query.hasOwnProperty("predictor")) {
+        findQueryObject.predictor = url_parts.query.predictor;
+
+        if (url_parts.query.hasOwnProperty("count")) {
+            queryOptions.limit = url_parts.query.count;
+        }
+        paramatersValid = true;
+    }
+
+    if (paramatersValid) {
         mongoClient.connect(mongoUrl, function (mongoError, db) {
-
-            if(!mongoError) {
+            var predictionsCollection = db.collection('predictions');
+            if (!mongoError) {
                 // get all the stock's symbols and names from the table
-                db.collection('predictions').find({ creator: creatorString }).toArray(function (err, result) {
+                predictionsCollection.find(findQueryObject, queryOptions).toArray(function (err, result) {
+                    // build the response object
+                    var responseObject = {};
+                    responseObject.predictions = result;
+                    responseObject.status = "success";
+                    responseObject.reason = "";
+                    // send the response in JSON format
                     res.setHeader('Content-Type', 'application/json');
-                    res.send(JSON.stringify(result));
+                    res.send(JSON.stringify(responseObject));
                     db.close();
                 });
+            }
+            else {
+                res.setHeader('Content-Type', 'application/json');
+                res.send(JSON.stringify({ status: "failed", reason: "Error occured during database query." }));
             }
         });
     }
 
-    else
-    {
+    else {
         res.setHeader('Content-Type', 'application/json');
-        res.send(JSON.stringify("Unprovided paramaters: creator"));
+        res.send(JSON.stringify({ status: "failed", reason: "Required paramaters are missing."}));
+    }
+});
+
+
+/** 
+  * Values router
+  */
+var valuesRouter = express.Router();
+app.use('/values', valuesRouter);
+valuesRouter.use(function (req, res, next) {
+    var url = require('url');
+    var url_parts = url.parse(req.originalUrl, true);
+
+    var queryOptions = {};
+    var findQueryObject = {};
+
+    var paramatersValid = false;
+
+    // grab the "type" and "object" paramater from the GET request
+    if (url_parts.query.hasOwnProperty("type") &&
+        url_parts.query.hasOwnProperty("object")) {
+        findQueryObject.type = url_parts.query.type;
+        findQueryObject.object = url_parts.query.object;
+        paramatersValid = true;
+        // set the start time if "start" is a paramater in the GET request
+        if (url_parts.query.hasOwnProperty("start")) {
+            var startTime = url_parts.query.start;
+            if (!findQueryObject.hasOwnProperty("values")) {
+                findQueryObject.values = { $elemMatch: { time: {} } };
+            }
+            findQueryObject.values.$elemMatch.time.$gte = startTime;
+        }
+        // set the end time if "end" is a paramater in the GET request
+        if (url_parts.query.hasOwnProperty("end")) {
+            var endTime = url_parts.query.end;
+            if (!findQueryObject.hasOwnProperty("values")) {
+                findQueryObject.values = { $elemMatch: { time: {} } };
+            }
+            findQueryObject.values.$elemMatch.time.$lte = endTime;
+        }
+        // limit the result count if "count" is a paramater in the GET request
+        if (url_parts.query.hasOwnProperty("count")) {
+            queryOptions.limit = url_parts.query.count;
+        }
+    }
+
+    if (paramatersValid) {
+        mongoClient.connect(mongoUrl, function (mongoError, db) {
+            var objectsCollection = db.collection('objects');
+            if (!mongoError) {
+                // get all the stock's symbols and names from the table
+                objectsCollection.find(findQueryObject, queryOptions).toArray(function (err, result) {
+                    // build the response object
+                    var responseObject = {};
+                    responseObject.values = result;
+                    responseObject.status = "success";
+                    responseObject.reason = "";
+                    // send the response in JSON format
+                    res.setHeader('Content-Type', 'application/json');
+                    res.send(JSON.stringify(responseObject));
+                    db.close();
+                });
+            }
+            else {
+                res.setHeader('Content-Type', 'application/json');
+                res.send(JSON.stringify({ status: "failed", reason: "Error occured during database query." }));
+            }
+        });
+    }
+
+    else {
+        res.setHeader('Content-Type', 'application/json');
+        res.send(JSON.stringify({ status: "failed", reason: "Required paramaters are missing." }));
     }
 });
 
@@ -294,20 +284,35 @@ preditionsDataRouter.use(function (req, res, next) {
 /**
   * Insert a prediction into the predictions collection
   */
-var insertPrediction = function (db, requestBody, callback) {
+var insertPrediction = function (db, predictorId, requestBody) {
+    var currentTime = Math.floor(milliseconds / 1000);
     db.collection('predictions').insertOne({
-        "creator": requestBody["creator"],
-        "type": requestBody["type"],
-        "object": requestBody["object"],
-        "metric": requestBody["metric"],
-        "action": requestBody["action"],
-        "start": requestBody["start"],
-        "end": requestBody["end"]
-
+        predictor_id: predictorId,
+        type: requestBody["type"],
+        object: requestBody["object"],
+        value: requestBody["value"],
+        action: requestBody["action"],
+        start: currentTime,
+        end: requestBody["end"]
     }, function (err, result) {
-        assert.equal(err, null);
         console.log("Inserted a prediction");
-        callback(result);
+        db.close();
+        res.setHeader('Content-Type', 'application/json');
+        res.send(JSON.stringify({ status: "success", record: result }));
+    });
+};
+
+
+/**
+  * Insert a prediction into the predictions collection
+  */
+var insertPredictorThenPrediction = function (db, callback, requestBody) {
+    var currentTime = Math.floor(milliseconds / 1000);
+    db.collection('predictors').insertOne({
+        predictor: requestBody["predictor"]
+    }, function (err, result) {
+        console.log("Inserted a prediction");
+        callback(db, result._id, requestBody);
     });
 };
 
@@ -316,68 +321,58 @@ var insertPrediction = function (db, requestBody, callback) {
   * Receive prediction creation posts and insert them in the collection
   */
 app.post('/createprediction', function (req, res) {
-    // Make sure all of the required fields are in the request body and the 
-    // creator string consists only of alphanumerics and spaces, and that 
-    // the creator string length is less than 1000 characters.
+    // Make sure all of the required fields are in the request body
     if (req.body != null
-        && "creator" in req.body
-        && isAlphanumericalPlusSpaces(req.body)
-        && req.body["creator"].length < 1000
-        && "type" in req.body
-        && "start" in req.body
-        && "end" in req.body
-        && "object" in req.body
-        && "metric" in req.body
-        && "action" in req.body) {
+        && "predictionInfo" in req.body) {
+        var predictionInfo = JSON.parse(req.body.predictionInfo);
 
-        // insert the prediction
-        mongoClient.connect(mongoUrl, function (mongoError, db) {
-            assert.equal(null, mongoError);
-            insertPrediction(db, req.body, function () {
-                db.close();
+        if("predictor" in req.body.predictionInfo
+            && "type" in req.body.predictionInfo
+            && "object" in req.body.predictionInfo
+            && "value" in req.body.predictionInfo
+            && "action" in req.body.predictionInfo
+            && "end" in req.body.predictionInfo) {
+            // insert the prediction
+            mongoClient.connect(mongoUrl, function (mongoError, db) {
+                var predictorCollection = db.collection('predictor');
+                if (!mongoError) {
+                    // check to see if the predictor exists in the predictor collection
+                    predictorCollection.find({ predictor: req.body.predictor }).toArray(function (err, result) {
+                        if (result.length > 0) {
+                            insertPrediction(
+                                db,
+                                result[0]._id,
+                                req.body.predictionInfo);
+                        }
+
+                        else {
+                            insertPredictorThenPrediction(
+                                db,
+                                function (db, predictorId, requestBody) {
+                                    insertPrediction(db, predictorId, requestBody)
+                                },
+                                req.body);
+                        }
+                    });
+                }
+
+                else {
+                    res.setHeader('Content-Type', 'application/json');
+                    res.send(JSON.stringify({ status: "failed", reason: "Error occured during database query." }));
+                }
             });
-        });
+        }
+        // some or all of the required fields were not present
+        else {
+            res.setHeader('Content-Type', 'application/json');
+            res.send(JSON.stringify({ status: "failed", reason: "Required paramaters are missing." }));
+        }
     }
     // some or all of the required fields were not present
     else {
-        console.log("Missing things from the post request.");
+        res.setHeader('Content-Type', 'application/json');
+        res.send(JSON.stringify({ status: "failed", reason: "Required paramaters are missing." }));
     }
 });
-
-function getCurrentDateTime() {
-    var date = new Date();
-
-    var year = date.getFullYear();
-
-    var monthNumber = date.getMonth();
-    monthNumber++;
-    if(monthNumber < 10) {
-        monthNumber = "0" + monthNumber;
-    }
-
-    var dayNumber = date.getDate();
-    if(dayNumber < 10) {
-        dayNumber = "0" + dayNumber;
-    }
-
-    var hourNumber = date.getHours();
-    if(hourNumber < 10) {
-        hourNumber = "0" + hourNumber;
-    }
-
-    var minuteNumber = date.getMinutes();
-    if(minuteNumber < 10) {
-        minuteNumber = "0" + minuteNumber;
-    }
-
-    var secondNumber = date.getSeconds();
-    if(secondNumber < 10) {
-        secondNumber = "0" + secondNumber;
-    }
-
-    return year + "-" + monthNumber + 
-        "-" + dayNumber + " " + hourNumber + ":" + 
-        minuteNumber + ":" + secondNumber;
-}
 
 app.listen(3060);

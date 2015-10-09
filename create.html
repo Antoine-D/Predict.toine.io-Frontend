@@ -22,12 +22,7 @@
       <form action="http://104.131.219.239:3060/createprediction">
       <div class="jumbotron">
         <div>
-          <!--<option selected disabled hidden value=''>Select Stock Symbol</option>
-            <option value="AAPL">AAPL</option>
-            <option value="GOOG">GOOG</option>
-            <option value="MSFT">MSFT</option>
-            <option value="AMZ">AMZ</option>-->
-          <select id="p-object" class='form-control symbol-dropdown'>
+          <select id="selected-symbol" class='form-control symbol-dropdown'>
           </select>
         </div>
       </div>
@@ -39,7 +34,7 @@
 
       <div id="prediction-sentence" class="jumbotron" style="display: none; font-size: 200%; margin-left: 0px; color: #53B981;">
         <p>
-          <span style="font-size: 130%;">I predict</span> <span id="selected-symbol" style="background-color: black; color: #FFCC00; padding: 4px; border-radius: 4px;">AAPL</span> <span style="font-size: 130%;">will</span> 
+          <span style="font-size: 130%;">I predict</span> <span id="symbol-span" style="background-color: black; color: #FFCC00; padding: 4px; border-radius: 4px;">AAPL</span> <span style="font-size: 130%;">will</span> 
           <select id="p-action">
             <option>reach above</option>
             <option>sink below</option>
@@ -96,10 +91,10 @@
             alert("create clicked");
         });
 
-        $("#p-object").on("change", function () {
-            var selectedSymbol = $("#p-object").val();
-            $("#p-object").html(selectedSymbol);
-            $("#chart-header-symbol").html($("#p-object").val());
+        $("#selected-symbol").on("change", function () {
+            var selectedSymbol = $("#selected-symbol").val();
+            $("#symbol-span").html(selectedSymbol);
+            $("#chart-header-symbol").html(selectedSymbol);
             
             var stockHistoryToday;
             var nowTime = parseInt((new Date).getTime()/1000);
@@ -129,7 +124,7 @@
         */
       var populateSymbolsDropdown = function () {
         // grab the stocks symbols and names
-        var stocksInfoEndpoint = "http://104.131.219.239:3060/stocksinfo/";
+        var stocksInfoEndpoint = "http://104.131.219.239:3060/objects/";
         var xmlhttp = new XMLHttpRequest();
         xmlhttp.open("GET", stocksInfoEndpoint, true);
         xmlhttp.onreadystatechange=function() {
@@ -142,16 +137,16 @@
               return stockA.symbol.localeCompare(stockB.symbol);
             });
             // clear the dropdown
-            $("#p-object").html("");
+            $("#selected-symbol").html("");
             // append the default option to the symbol select
             var defaultOption = $("<option selected disabled hidden value=''>Select Stock Symbol</option>");
-            $("#p-object").append(defaultOption);
+            $("#selected-symbol").append(defaultOption);
             // populate the countries dropdown
             for(var i = 0; i < stocksInfoData.length; i++) {
               var stockInfoOption = $("<option></option>");
               $(stockInfoOption).val(stocksInfoData[i].symbol);
               $(stockInfoOption).html(stocksInfoData[i].symbol + " " + stocksInfoData[i].name);
-              $("#p-object").append(stockInfoOption);
+              $("#selected-symbol").append(stockInfoOption);
             }
           }
         }
@@ -168,7 +163,7 @@
         $('#price-history-chart').highcharts({});
         
         // create the endpoint GET url with params
-        var stockPricesEndpoint = "http://104.131.219.239:3060/stockpricehistory";
+        var stockPricesEndpoint = "http://104.131.219.239:3060/objects";
         stockPricesEndpoint += "?";
         stockPricesEndpoint += "symbol=";
         stockPricesEndpoint += encodeURIComponent(String(symbol).trim());
