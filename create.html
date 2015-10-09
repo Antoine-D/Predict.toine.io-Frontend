@@ -34,7 +34,7 @@
 
       <div id="prediction-sentence" class="jumbotron" style="display: none; font-size: 200%; margin-left: 0px; color: #53B981;">
         <p>
-          <span style="font-size: 130%;">I predict</span> <span id="symbol-span" style="background-color: black; color: #FFCC00; padding: 4px; border-radius: 4px;">AAPL</span> <span style="font-size: 130%;">will</span> 
+          <span style="font-size: 130%;">I predict</span> <span id="p-object" style="background-color: black; color: #FFCC00; padding: 4px; border-radius: 4px;"></span> <span style="font-size: 130%;">will</span> 
           <select id="p-action">
             <option>reach above</option>
             <option>sink below</option>
@@ -43,7 +43,7 @@
           </select>
         </p>
         <p>
-          $<input id="p-metric" type="number" style="width: 100px;" min="0" max="100.00"> <span style="font-size: 130%;">by</span> <input id="p-end-time" type="time"> <span style="font-size: 130%;">on</span>
+          $<input id="p-value" type="number" style="width: 100px;" min="0" max="100.00"> <span style="font-size: 130%;">by</span> <input id="p-end-time" type="time"> <span style="font-size: 130%;">on</span>
         </p>
         <p>
           <select id="p-end-month">
@@ -53,8 +53,12 @@
           <input id="p-end-day" type="number" style="width: 50px;" min="1" max="31">
           <input id="p-end-year" type="number" style="width: 70px;" min="2015" max="2016">
         </p>
+        <p>
+            <input id="p-predictor" type="text">
+        </p>
 
-        <button id="p-create-button" href="#predictions-search-section" class="btn btn-lg btn-custom main-button">Create Prediction</button>
+
+        <button id="p-create-button" class="btn btn-lg btn-custom main-button">Create Prediction</button>
       </div>
       </form>
 
@@ -89,17 +93,46 @@
           */
         $("#p-create-button").on("click", function() {
             alert("create clicked");
+
+            var endYear = $("#p-end-year").val();
+            var endMonth = $("#p-end-month").val();
+            var endDay = $("#p-end-day").val();
+            var endTime = $("#p-end-time");
+
+            if (endTime.trim().length > 0 && endTime.indexOf(":") > -1) {
+                var colonIndex = endTime.indexOf(":");
+                var hour = parseInt(0, endTime.trim().substring(colonIndex));
+                var minute = parseInt(endTime.trim().substring(colonIndex));
+
+                var endDate = new Date(endYear, endMonth, endDay, hour, minute, 0, 0);
+
+                var predictor = $("#p-predictor").val(); // todo: input for predictor
+                var object = $("#p-object").val();
+                var action = $("#p-action").val();
+                var value = $("#p-value").val();
+
+                var endpointUrl = "?type=stock";
+                endpointUrl += "&object=";
+                endpointUrl += object;
+                endpointUrl += "&action=";
+                endpointUrl += action;
+                endpointUrl += "&value=";
+                endpointUrl += value;
+                endpointUrl += "&end=";
+                endpointUrl += endDate.getTime();
+            }
         });
 
         $("#selected-symbol").on("change", function () {
             var selectedSymbol = $("#selected-symbol").val();
-            $("#symbol-span").html(selectedSymbol);
+            $("#p-object").html(selectedSymbol);
             $("#chart-header-symbol").html(selectedSymbol);
             
-            var stockHistoryToday;
+            // populate the price history graph using the stock symbol, the epoch time now, 
+            // and the epoch time 24 hours hours ago.
             var nowTime = parseInt((new Date).getTime()/1000);
-            var yesterdayTime = parseInt((new Date).getTime()/1000);
-            populatePriceHistoryGraph($("#p-object").val(), nowTime, yesterdayTime);
+            var yesterdayTime = parseInt((new Date).getTime()/1000) - (24*60*60);
+            populatePriceHistoryGraph($(event.target).val(), nowTime, yesterdayTime);
 
             $("#stock-price-history").show();
             $("#prediction-sentence").show();
@@ -131,20 +164,10 @@
           // if the status is correct, attempt to parse the response as an object
           if(xmlhttp.readyState==4 && xmlhttp.status==200) {
             var rawStocksInfoData = xmlhttp.responseText;
-            rawStocksInfoData = JSON.parse(rawStocksInfoData);
-            stocksList = Array();
-            // create object for the symbol and company name for each equity
-            for(var i = 0; i < rawStocksInfoData.objects.length; i++) {
-              var stockObject = {};
-              stockObject.symbol = rawStocksInfoData.objects[i].name.split(" ")[0].trim();
-              var nameIndex = rawStocksInfoData.objects[i].name.indexOf(stockObject.symbol) 
-                + stockObject.symbol.length;
-              stockObject.name = rawStocksInfoData.objects[i].name.substring(nameIndex).trim();
-              stocksList.push(stockObject);
-            }
+            var stocksList = JSON.parse(rawStocksInfoData).objects;
             // sort the stocks info data array by symbol
-            stocksList.sort(function(stockA, stockB) {
-              return stockA.symbol.localeCompare(stockB.symbol);
+            stocksList.sort(function (stockA, stockB) {
+                return stockA.name.localeCompare(stockB.name);
             });
             // clear the dropdown
             $("#selected-symbol").html("");
@@ -154,8 +177,8 @@
             // populate the countries dropdown
             for(var i = 0; i < stocksList.length; i++) {
               var stockInfoOption = $("<option></option>");
-              $(stockInfoOption).val(stocksList[i].symbol);
-              $(stockInfoOption).html(stocksList[i].symbol + " " + stocksList[i].name);
+              $(stockInfoOption).val(stocksList[i].name);
+              $(stockInfoOption).html(stocksList[i].name + " " + stocksList[i].company);
               $("#selected-symbol").append(stockInfoOption);
             }
           }
@@ -173,10 +196,10 @@
         $('#price-history-chart').highcharts({});
         
         // create the endpoint GET url with params
-        var stockPricesEndpoint = "http://104.131.219.239:3060/objects";
-        stockPricesEndpoint += "?";
-        stockPricesEndpoint += "symbol=";
+        var stockPricesEndpoint = "http://104.131.219.239:3060/objects?type=stock";
+        stockPricesEndpoint += "&object=";
         stockPricesEndpoint += encodeURIComponent(String(symbol).trim());
+        stockPricesEndpoint += "&includeValues=y";
         stockPricesEndpoint += "&start=";
         stockPricesEndpoint += encodeURIComponent(String(startDateTime).trim());
         stockPricesEndpoint += "&end=";
@@ -189,13 +212,13 @@
           // if the status is correct, attempt to parse the response as an object
           if(xmlhttp.readyState==4 && xmlhttp.status==200) {
               var rawstockPriceHistory = xmlhttp.responseText;
-              stockPriceHistory = JSON.parse(rawstockPriceHistory);
+              var stockPriceHistory = JSON.parse(rawstockPriceHistory).objects;
               console.log(stockPriceHistory);
               // create seperate lists for prices and dates
               var prices = Array();
               var times = Array(); // epoch times
               for (var i = 0; i < stockPriceHistory.length; i++) {
-                  prices.push(stockPriceHistory[i].price);
+                  prices.push(stockPriceHistory[i].value);
                   times.push(stockPriceHistory[i].time);
               }
               // draw the graph using the times (x-axis) and prices (y-axis)
@@ -236,7 +259,7 @@
                   }
               }],
               yAxis: [{
-                  min: Math.min.apply(Math, stockHistoryToday.prices),
+                  min: Math.min.apply(Math, prices),
                   gridLineWidth: 0,
                   title: {
                       text: 'Price ($)',
