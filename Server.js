@@ -294,22 +294,25 @@ valuesRouter.use(function (req, res, next) {
 /**
   * Insert a prediction into the predictions collection
   */
-var insertPrediction = function (db, predictorId, createQuery) {
-    var currentTime = Math.floor(milliseconds / 1000);
+var insertPrediction = function (db, predictorId, predictionCreateObject) {
+    var currentTime = Math.floor(new Date().getTime() / 1000);
     db.collection('predictions').insertOne({
         predictor_id: predictorId,
-        type: createQuery.type,
-        object: createQuery.object,
-        value: createQuery.value,
-        action: createQuery.action,
+        type: predictionCreateObject.type,
+        object: predictionCreateObject.object,
+        value: predictionCreateObject.value,
+        action: predictionCreateObject.action,
         start: currentTime,
-        end: createQuery.end
+        end: predictionCreateObject.end
     }, function (err, result) {
         console.log("Inserted a prediction");
         console.log(result);
         db.close();
-        res.setHeader('Content-Type', 'application/json');
-        res.send(JSON.stringify({ status: "success", record: result }));
+        // redirect user the the new prediction
+        res.writeHead(301, { Location: "http://104.131.219.239:3030/predictions?id=" + result._id });
+        res.end();
+        /*res.setHeader('Content-Type', 'application/json');
+        res.send(JSON.stringify({ status: "success", record: result }));*/
     });
 };
 
@@ -317,14 +320,14 @@ var insertPrediction = function (db, predictorId, createQuery) {
 /**
   * Insert a prediction into the predictions collection
   */
-var insertPredictorThenPrediction = function (db, callback, createQuery) {
+var insertPredictorThenPrediction = function (db, callback, predictionCreateObject) {
     var currentTime = Math.floor(milliseconds / 1000);
     db.collection('predictors').insertOne({
-        predictor: createQuery.predictor
+        predictor: predictionCreateObject.predictor
     }, function (err, result) {
         console.log("Inserted a predictor");
         console.log(result);
-        callback(db, result._id, createQuery);
+        callback(db, result._id, predictionCreateObject);
     });
 };
 
@@ -332,42 +335,51 @@ var insertPredictorThenPrediction = function (db, callback, createQuery) {
 /**
   * Receive prediction creation posts and insert them in the collection
   */
-var createPredictionRouter = express.Router();
+/*var createPredictionRouter = express.Router();
 app.use('/createprediction', createPredictionRouter);
-createPredictionRouter.use(function (req, res, next) {
-
+createPredictionRouter.use(function (req, res, next) {*/
+app.post('/createprediction', function(req, res) {
     var url = require('url');
     var url_parts = url.parse(req.originalUrl, true);
 
     // Make sure all of the required fields are in the request body
-    if(url_parts != null &&
-        url_parts.query.hasOwnProperty("predictor") &&
-        url_parts.query.hasOwnProperty("type") &&
-        url_parts.query.hasOwnProperty("object") &&
-        url_parts.query.hasOwnProperty("value") &&
-        url_parts.query.hasOwnProperty("action") &&
-        url_parts.query.hasOwnProperty("end")) {
+    if (req.body != null &&
+        "predictor" in req.body &&
+        "type" in req.body &&
+        "object" in req.body &&
+        "value" in req.body &&
+        "action" in req.body &&
+        "end" in req.body) {
+        // create the prediction object to insert
+        var predictionCreateObject = {};
+        predictionCreateObject.predictor = req.body.predictor;
+        predictionCreateObject.type = req.body.type;
+        predictionCreateObject.object = req.body.object;
+        predictionCreateObject.value = req.body.value;
+        predictionCreateObject.action = req.body.action;
+        predictionCreateObject.end = req.body.end;
+
         // insert the prediction
         mongoClient.connect(mongoUrl, function (mongoError, db) {
             var predictorCollection = db.collection('predictor');
             if (!mongoError) {
                 // check to see if the predictor exists in the predictor collection
-                predictorCollection.find({ predictor: url_parts.query.predictor }).toArray(function (err, result) {
+                predictorCollection.find({ predictor: predictionCreateObject.predictor }).toArray(function (err, result) {
                     // if the predictor exists, then insert prediction with the retreived predictor _id
                     if (result.length > 0) {
                         insertPrediction(
                             db,
                             result[0]._id,
-                            url_parts.query);
+                            predictionCreateObject);
                     }
                     // if the predictor doesn't exist, then insert the predictor and then insert the prediction
                     else {
                         insertPredictorThenPrediction(
                             db,
-                            function (db, predictorId, requestBody) {
-                                insertPrediction(db, predictorId, requestBody)
+                            function (db, predictorId, predictionObject) {
+                                insertPrediction(db, predictorId, predictionObject)
                             },
-                            url_parts.query);
+                            predictionCreateObject);
                     }
                 });
             }
