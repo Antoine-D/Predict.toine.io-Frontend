@@ -124,16 +124,26 @@
         */
       var populateSymbolsDropdown = function () {
         // grab the stocks symbols and names
-        var stocksInfoEndpoint = "http://104.131.219.239:3060/objects/";
+        var stocksInfoEndpoint = "http://104.131.219.239:3060/objects?type=stock";
         var xmlhttp = new XMLHttpRequest();
         xmlhttp.open("GET", stocksInfoEndpoint, true);
         xmlhttp.onreadystatechange=function() {
           // if the status is correct, attempt to parse the response as an object
           if(xmlhttp.readyState==4 && xmlhttp.status==200) {
             var rawStocksInfoData = xmlhttp.responseText;
-            stocksInfoData = JSON.parse(rawStocksInfoData);
+            rawStocksInfoData = JSON.parse(rawStocksInfoData);
+            stocksList = Array();
+            // create object for the symbol and company name for each equity
+            for(var i = 0; i < rawStocksInfoData.objects.length; i++) {
+              var stockObject = {};
+              stockObject.symbol = rawStocksInfoData.objects[i].name.split(" ")[0].trim();
+              var nameIndex = rawStocksInfoData.objects[i].name.indexOf(stockObject.symbol) 
+                + stockObject.symbol.length;
+              stockObject.name = rawStocksInfoData.objects[i].name.substring(nameIndex).trim();
+              stocksList.push(stockObject);
+            }
             // sort the stocks info data array by symbol
-            stocksInfoData.sort(function(stockA, stockB) {
+            stocksList.sort(function(stockA, stockB) {
               return stockA.symbol.localeCompare(stockB.symbol);
             });
             // clear the dropdown
@@ -142,10 +152,10 @@
             var defaultOption = $("<option selected disabled hidden value=''>Select Stock Symbol</option>");
             $("#selected-symbol").append(defaultOption);
             // populate the countries dropdown
-            for(var i = 0; i < stocksInfoData.length; i++) {
+            for(var i = 0; i < stocksList.length; i++) {
               var stockInfoOption = $("<option></option>");
-              $(stockInfoOption).val(stocksInfoData[i].symbol);
-              $(stockInfoOption).html(stocksInfoData[i].symbol + " " + stocksInfoData[i].name);
+              $(stockInfoOption).val(stocksList[i].symbol);
+              $(stockInfoOption).html(stocksList[i].symbol + " " + stocksList[i].name);
               $("#selected-symbol").append(stockInfoOption);
             }
           }

@@ -125,16 +125,16 @@ objectsRouter.use(function (req, res, next) {
                 // grab the objects from the table
                 var objectsArray = Array();
                 for(var i = 0; i < result.length; i++) {
-                    if(includeObjectValues) {
-                        objectsArray.push({object: result[i].object});
+                    if(!includeObjectValues) {
+                        objectsArray.push({name: result[i].name});
                     }
                     else {
-                        objectsArray.push({object: result[i].object, values: result[i].values});
+                        objectsArray.push({name: result[i].name, values: result[i].values});
                     }
                 }
 
                 res.setHeader('Content-Type', 'application/json');
-                res.send(JSON.stringify(objectsArray));
+                res.send(JSON.stringify({objects: objectsArray}));
                 db.close();
             });
         }
