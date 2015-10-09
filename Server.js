@@ -29,6 +29,7 @@ app.get('/prediction',function(req,res) {
     res.sendFile(path.join(__dirname+"/prediction.html"));
 });
 
+// update the stocks every 1 minuite
 schedule.scheduleJob('01 * * * * *', function() {
     var YQL = require('yql');
     var queryString = "select * from yahoo.finance.quote where symbol in ('AAPL') "
@@ -71,11 +72,11 @@ app.use("/assets", express.static(__dirname + '/assets'));
 var prediction = { predictor_id: "507f1f77bcf86cd799439011", type: "stock", object: "AAPL", value: 101.10, action: "rise above", start: 1444000001, end: 1444100000 };
 
 // predictors
-var predictor = { predictor: "anemail@gmail.com"}
+var predictor = { predictor: "anemail@gmail.com" };
 
 // objects' values
-var object = { type: "stock", object: "AAPL", values: [{ time: 1444000001, value: 9.77 }, { time: 1444000061, value: 9.72 }] }
-
+var object = { type: "", object: "", values: [{ time: 1444000001, value: 9.77 }, { time: 1444000061, value: 9.72 }] };
+var stockObject = { type: "stock", object: "AAPL", company: "Apple Inc.", values: [{ time: 1444000001, value: 109.77 }, { time: 1444000061, value: 109.72 }] };
 
 /** 
   * Get all objects of the given type
@@ -97,22 +98,31 @@ objectsRouter.use(function (req, res, next) {
         findQueryObject.type = url_parts.query.type;
         paramatersValid = true;
     }
-
+    // grab the "object" paramater from the GET request
     if (url_parts.query.hasOwnProperty("object")) {
         findQueryObject.object = url_parts.query.object;
     }
-
-    if (url_parts.query.hasOwnProperty("start")) {
-        findQueryObject.start = url_parts.query.start;
-    }
-
-    if (url_parts.query.hasOwnProperty("end")) {
-        findQueryObject.end = url_parts.query.end;
-    }
-
+    // grab the "includeValues" paramater from the GET request
     if (url_parts.query.hasOwnProperty("includeValues") 
         && url_parts.query.includeValues.toLowerCase() == "y") {
         includeObjectValues = true;
+
+        // Check if the time interval is specified as a paramater
+        // which will dictate lower and upper bound of times of prices to fetch.
+        if (url_parts.query.hasOwnProperty("start")) {
+            var startTime = url_parts.query.start;
+            if (!findQueryObject.hasOwnProperty("values")) {
+                findQueryObject.values = { $elemMatch: { time: {} } };
+            }
+            findQueryObject.values.$elemMatch.time.$gte = startTime;
+        }
+        if (url_parts.query.hasOwnProperty("end")) {
+            var endTime = url_parts.query.end;
+            if (!findQueryObject.hasOwnProperty("values")) {
+                findQueryObject.values = { $elemMatch: { time: {} } };
+            }
+            findQueryObject.values.$elemMatch.time.$lte = endTime;
+        }
     }
 
     if (paramatersValid) {
@@ -122,7 +132,7 @@ objectsRouter.use(function (req, res, next) {
         if (!mongoError) {
 
             objectsCollection.find(findQueryObject).toArray(function (err, result) {
-                // grab the objects from the table
+                // grab the objects from the table (include the values also if specified they're wanted in the query).
                 var objectsArray = Array();
                 for(var i = 0; i < result.length; i++) {
                     if(!includeObjectValues) {
@@ -284,18 +294,19 @@ valuesRouter.use(function (req, res, next) {
 /**
   * Insert a prediction into the predictions collection
   */
-var insertPrediction = function (db, predictorId, requestBody) {
+var insertPrediction = function (db, predictorId, createQuery) {
     var currentTime = Math.floor(milliseconds / 1000);
     db.collection('predictions').insertOne({
         predictor_id: predictorId,
-        type: requestBody["type"],
-        object: requestBody["object"],
-        value: requestBody["value"],
-        action: requestBody["action"],
+        type: createQuery.type,
+        object: createQuery.object,
+        value: createQuery.value,
+        action: createQuery.action,
         start: currentTime,
-        end: requestBody["end"]
+        end: createQuery.end
     }, function (err, result) {
         console.log("Inserted a prediction");
+        console.log(result);
         db.close();
         res.setHeader('Content-Type', 'application/json');
         res.send(JSON.stringify({ status: "success", record: result }));
@@ -306,13 +317,14 @@ var insertPrediction = function (db, predictorId, requestBody) {
 /**
   * Insert a prediction into the predictions collection
   */
-var insertPredictorThenPrediction = function (db, callback, requestBody) {
+var insertPredictorThenPrediction = function (db, callback, createQuery) {
     var currentTime = Math.floor(milliseconds / 1000);
     db.collection('predictors').insertOne({
-        predictor: requestBody["predictor"]
+        predictor: createQuery.predictor
     }, function (err, result) {
-        console.log("Inserted a prediction");
-        callback(db, result._id, requestBody);
+        console.log("Inserted a predictor");
+        console.log(result);
+        callback(db, result._id, createQuery);
     });
 };
 
@@ -320,53 +332,51 @@ var insertPredictorThenPrediction = function (db, callback, requestBody) {
 /**
   * Receive prediction creation posts and insert them in the collection
   */
-app.post('/createprediction', function (req, res) {
+var createPredictionRouter = express.Router();
+app.use('/createprediction', createPredictionRouter);
+createPredictionRouter.use(function (req, res, next) {
+
+    var url = require('url');
+    var url_parts = url.parse(req.originalUrl, true);
+
     // Make sure all of the required fields are in the request body
-    if (req.body != null
-        && "predictionInfo" in req.body) {
-        var predictionInfo = JSON.parse(req.body.predictionInfo);
+    if(url_parts != null &&
+        url_parts.query.hasOwnProperty("predictor") &&
+        url_parts.query.hasOwnProperty("type") &&
+        url_parts.query.hasOwnProperty("object") &&
+        url_parts.query.hasOwnProperty("value") &&
+        url_parts.query.hasOwnProperty("action") &&
+        url_parts.query.hasOwnProperty("end")) {
+        // insert the prediction
+        mongoClient.connect(mongoUrl, function (mongoError, db) {
+            var predictorCollection = db.collection('predictor');
+            if (!mongoError) {
+                // check to see if the predictor exists in the predictor collection
+                predictorCollection.find({ predictor: url_parts.query.predictor }).toArray(function (err, result) {
+                    // if the predictor exists, then insert prediction with the retreived predictor _id
+                    if (result.length > 0) {
+                        insertPrediction(
+                            db,
+                            result[0]._id,
+                            url_parts.query);
+                    }
+                    // if the predictor doesn't exist, then insert the predictor and then insert the prediction
+                    else {
+                        insertPredictorThenPrediction(
+                            db,
+                            function (db, predictorId, requestBody) {
+                                insertPrediction(db, predictorId, requestBody)
+                            },
+                            url_parts.query);
+                    }
+                });
+            }
 
-        if("predictor" in req.body.predictionInfo
-            && "type" in req.body.predictionInfo
-            && "object" in req.body.predictionInfo
-            && "value" in req.body.predictionInfo
-            && "action" in req.body.predictionInfo
-            && "end" in req.body.predictionInfo) {
-            // insert the prediction
-            mongoClient.connect(mongoUrl, function (mongoError, db) {
-                var predictorCollection = db.collection('predictor');
-                if (!mongoError) {
-                    // check to see if the predictor exists in the predictor collection
-                    predictorCollection.find({ predictor: req.body.predictor }).toArray(function (err, result) {
-                        if (result.length > 0) {
-                            insertPrediction(
-                                db,
-                                result[0]._id,
-                                req.body.predictionInfo);
-                        }
-
-                        else {
-                            insertPredictorThenPrediction(
-                                db,
-                                function (db, predictorId, requestBody) {
-                                    insertPrediction(db, predictorId, requestBody)
-                                },
-                                req.body);
-                        }
-                    });
-                }
-
-                else {
-                    res.setHeader('Content-Type', 'application/json');
-                    res.send(JSON.stringify({ status: "failed", reason: "Error occured during database query." }));
-                }
-            });
-        }
-        // some or all of the required fields were not present
-        else {
-            res.setHeader('Content-Type', 'application/json');
-            res.send(JSON.stringify({ status: "failed", reason: "Required paramaters are missing." }));
-        }
+            else {
+                res.setHeader('Content-Type', 'application/json');
+                res.send(JSON.stringify({ status: "failed", reason: "Error occured during database query." }));
+            }
+        });
     }
     // some or all of the required fields were not present
     else {
