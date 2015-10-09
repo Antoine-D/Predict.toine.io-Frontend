@@ -39,7 +39,7 @@ schedule.scheduleJob('01 * * * * *', function() {
     var queryYQL = new YQL(queryString);
 
     queryYQL.exec(function(err, data) {
-        console.log(data.query.results);
+        //console.log(data.query.results);
         //store the price
         var currentTime = Math.floor(new Date()/1000);
 
@@ -58,14 +58,14 @@ schedule.scheduleJob('01 * * * * *', function() {
                     } 
                 }},
                 function(err, results) {
-                    console.log(results);
+                    //console.log(results);
                     db.close();
                 });
             }
         });
     });
 
-    console.log("been 1 minutes");
+    //console.log("been 1 minutes");
 });
 
 // Static files
@@ -75,7 +75,7 @@ app.use("/assets", express.static(__dirname + '/assets'));
   * Stocks info endpoint for getting name and symbol for all stocks in the table
   */
 var stocksInfoRouter = express.Router();
-app.use('/stocksinfo/', stocksInfoRouter);
+app.use('/stocksinfo', stocksInfoRouter);
 stocksInfoRouter.use(function (req, res, next) {
   mongoClient.connect(mongoUrl, function (mongoError, db) {
     var stocksCollection = db.collection('stocks');
@@ -100,7 +100,7 @@ stocksInfoRouter.use(function (req, res, next) {
   * two specified times (epoch format)
   */
 var stockPriceHistoryRouter = express.Router();
-app.use('/stockpricehistory/', stockPriceHistoryRouter);
+app.use('/stockpricehistory', stockPriceHistoryRouter);
 stockPriceHistoryRouter.use(function (req, res, next) {
 
     var url = require('url');
@@ -273,7 +273,7 @@ preditionsDataRouter.use(function (req, res, next) {
         var hashedCreatorString = url_parts.query.creator;
         var creatorString = unhash(hashedCreatorString);
 
-        console.log("Unhashed: " + creatorString);
+        //console.log("Unhashed: " + creatorString);
         mongoClient.connect(mongoUrl, function (mongoError, db) {
 
             if(!mongoError) {
@@ -340,7 +340,7 @@ app.post('/createprediction', function (req, res) {
             insertPrediction(db, req.body, function () {
                 db.close();
             });
-        });    
+        });
     }
     // some or all of the required fields were not present
     else {

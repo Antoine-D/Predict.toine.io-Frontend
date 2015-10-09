@@ -19,6 +19,7 @@
   <body>
 
     <div class="container">
+      <form action="http://104.131.219.239:3060/createprediction">
       <div class="jumbotron">
         <div>
           <!--<option selected disabled hidden value=''>Select Stock Symbol</option>
@@ -26,9 +27,7 @@
             <option value="GOOG">GOOG</option>
             <option value="MSFT">MSFT</option>
             <option value="AMZ">AMZ</option>-->
-          <select id="symbol-select" class='form-control symbol-dropdown'>
-              <option>A</option>
-              <option>B</option>
+          <select id="p-object" class='form-control symbol-dropdown'>
           </select>
         </div>
       </div>
@@ -41,7 +40,7 @@
       <div id="prediction-sentence" class="jumbotron" style="display: none; font-size: 200%; margin-left: 0px; color: #53B981;">
         <p>
           <span style="font-size: 130%;">I predict</span> <span id="selected-symbol" style="background-color: black; color: #FFCC00; padding: 4px; border-radius: 4px;">AAPL</span> <span style="font-size: 130%;">will</span> 
-          <select>
+          <select id="p-action">
             <option>reach above</option>
             <option>sink below</option>
             <option>stay above</option>
@@ -49,19 +48,20 @@
           </select>
         </p>
         <p>
-          $<input type="number" style="width: 100px;" min="0" max="100.00"> <span style="font-size: 130%;">by</span> <input type="time"> <span style="font-size: 130%;">on</span>
+          $<input id="p-metric" type="number" style="width: 100px;" min="0" max="100.00"> <span style="font-size: 130%;">by</span> <input id="p-end-time" type="time"> <span style="font-size: 130%;">on</span>
         </p>
         <p>
-          <select>
+          <select id="p-end-month">
             <option>May</option>
             <option>June</option>
           </select>
-          <input type="number" style="width: 50px;" min="1" max="31">
-          <input type="number" style="width: 70px;" min="2015" max="2016">
+          <input id="p-end-day" type="number" style="width: 50px;" min="1" max="31">
+          <input id="p-end-year" type="number" style="width: 70px;" min="2015" max="2016">
         </p>
 
-        <button id="check-your-predictions-button" href="#predictions-search-section" class="btn btn-lg btn-custom main-button">Create Prediction</button>
+        <button id="p-create-button" href="#predictions-search-section" class="btn btn-lg btn-custom main-button">Create Prediction</button>
       </div>
+      </form>
 
       <footer style="display: none;" class="row">
         <hr>
@@ -88,23 +88,23 @@
   <script>
     $(document).ready(function() {
 
-        $("#symbol-select").on("change", function () {
-            var selectedSymbol = $("#symbol-select").val();
-            $("#selected-symbol").html(selectedSymbol);
-            $("#chart-header-symbol").html($("#symbol-select").val());
+        /**
+          * When the prediction creation button is clicked, send the prediction 
+          * data to the server.
+          */
+        $("#p-create-button").on("click", function() {
+            alert("create clicked");
+        });
 
-            alert(selectedSymbol);
-            if (selectedSymbol == "A") {
-                $('#price-history-chart').highcharts({});
-            }
-            else {
-                fillGraphRandom();
-            }
+        $("#p-object").on("change", function () {
+            var selectedSymbol = $("#p-object").val();
+            $("#p-object").html(selectedSymbol);
+            $("#chart-header-symbol").html($("#p-object").val());
             
             var stockHistoryToday;
             var nowTime = parseInt((new Date).getTime()/1000);
             var yesterdayTime = parseInt((new Date).getTime()/1000);
-            populatePriceHistoryGraph($("#symbol-select").val(), nowTime, yesterdayTime);
+            populatePriceHistoryGraph($("#p-object").val(), nowTime, yesterdayTime);
 
             $("#stock-price-history").show();
             $("#prediction-sentence").show();
@@ -142,23 +142,23 @@
               return stockA.symbol.localeCompare(stockB.symbol);
             });
             // clear the dropdown
-            $("#symbol-select").html("");
+            $("#p-object").html("");
             // append the default option to the symbol select
             var defaultOption = $("<option selected disabled hidden value=''>Select Stock Symbol</option>");
-            $("#symbol-select").append(defaultOption);
+            $("#p-object").append(defaultOption);
             // populate the countries dropdown
             for(var i = 0; i < stocksInfoData.length; i++) {
               var stockInfoOption = $("<option></option>");
               $(stockInfoOption).val(stocksInfoData[i].symbol);
               $(stockInfoOption).html(stocksInfoData[i].symbol + " " + stocksInfoData[i].name);
-              $("#symbol-select").append(stockInfoOption);
+              $("#p-object").append(stockInfoOption);
             }
           }
         }
         xmlhttp.send();
       };
 
-      //populateSymbolsDropdown();
+      populateSymbolsDropdown();
 
       /**
         * Return the price history between [startDateTime, endDateTime]
@@ -168,7 +168,7 @@
         $('#price-history-chart').highcharts({});
         
         // create the endpoint GET url with params
-        var stockPricesEndpoint = "http://104.131.219.239:3060/stockpricehistory/";
+        var stockPricesEndpoint = "http://104.131.219.239:3060/stockpricehistory";
         stockPricesEndpoint += "?";
         stockPricesEndpoint += "symbol=";
         stockPricesEndpoint += encodeURIComponent(String(symbol).trim());
