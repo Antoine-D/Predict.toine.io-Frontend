@@ -131,6 +131,7 @@ objectsRouter.use(function (req, res, next) {
         var objectsCollection = db.collection('objects');
         if (!mongoError) {
 
+            console.log(findQueryObject);
             objectsCollection.find(findQueryObject).toArray(function (err, result) {
                 // grab the objects from the table (include the values also if specified they're wanted in the query).
                 var objectsArray = Array();
@@ -227,7 +228,7 @@ valuesRouter.use(function (req, res, next) {
     var url = require('url');
     var url_parts = url.parse(req.originalUrl, true);
 
-    var queryOptions = {};
+    var findProjectionObject = {};
     var findQueryObject = {};
 
     var paramatersValid = false;
@@ -241,31 +242,34 @@ valuesRouter.use(function (req, res, next) {
         // set the start time if "start" is a paramater in the GET request
         if (url_parts.query.hasOwnProperty("start")) {
             var startTime = url_parts.query.start;
-            if (!findQueryObject.hasOwnProperty("values")) {
-                findQueryObject.values = { $elemMatch: { time: {} } };
+            if (!findProjectionObject.hasOwnProperty("values")) {
+                findProjectionObject.values = { $elemMatch: { time: {} } };
             }
-            findQueryObject.values.$elemMatch.time.$gte = startTime;
+            findProjectionObject.values.$elemMatch.time.$gte = startTime;
         }
         // set the end time if "end" is a paramater in the GET request
         if (url_parts.query.hasOwnProperty("end")) {
             var endTime = url_parts.query.end;
-            if (!findQueryObject.hasOwnProperty("values")) {
-                findQueryObject.values = { $elemMatch: { time: {} } };
+            if (!findProjectionObject.hasOwnProperty("values")) {
+                findProjectionObject.values = { $elemMatch: { time: {} } };
             }
-            findQueryObject.values.$elemMatch.time.$lte = endTime;
+            findProjectionObject.values.$elemMatch.time.$lte = endTime;
         }
         // limit the result count if "count" is a paramater in the GET request
-        if (url_parts.query.hasOwnProperty("count")) {
-            queryOptions.limit = url_parts.query.count;
-        }
+        /*if (url_parts.query.hasOwnProperty("count")) {
+            findProjectionObject.limit = url_parts.query.count;
+        }*/
     }
 
     if (paramatersValid) {
         mongoClient.connect(mongoUrl, function (mongoError, db) {
             var objectsCollection = db.collection('objects');
             if (!mongoError) {
+                //console.log(findQueryObject);
+                console.log(findProjectionObject);
+                console.log(findProjectionObject.values.$elemMatch.time);
                 // get all the stock's symbols and names from the table
-                objectsCollection.find(findQueryObject, queryOptions).toArray(function (err, result) {
+                objectsCollection.find(findQueryObject, findProjectionObject).toArray(function (err, result) {
                     // build the response object
                     var responseObject = {};
                     responseObject.values = result;
