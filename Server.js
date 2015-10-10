@@ -228,56 +228,43 @@ valuesRouter.use(function (req, res, next) {
     var url = require('url');
     var url_parts = url.parse(req.originalUrl, true);
 
-    var findProjectionObject = {};
-    var findQueryObject = {};
+    var finalMatchObject;
+    var firstMatchObject = {$match: {}};
 
     var paramatersValid = false;
 
     // grab the "type" and "object" paramater from the GET request
     if (url_parts.query.hasOwnProperty("type") &&
         url_parts.query.hasOwnProperty("object")) {
-        findQueryObject.type = url_parts.query.type;
-        findQueryObject.object = url_parts.query.object;
+        firstMatchObject.$match.type = url_parts.query.type;
+        firstMatchObject.$match.object = url_parts.query.object;
         paramatersValid = true;
-        // set the start time if "start" is a paramater in the GET request
-        if (url_parts.query.hasOwnProperty("start")) {
-            var startTime = url_parts.query.start;
-            if (!findProjectionObject.hasOwnProperty("values")) {
-                findProjectionObject.values = { $elemMatch: { time: {} } };
-            }
-            findProjectionObject.values.$elemMatch.time.$gte = startTime;
+        // both start and end time are paramaters
+        if (url_parts.query.hasOwnProperty("start") && url_parts.query.hasOwnProperty("end")) {
+            var startTime = parseInt(url_parts.query.start);
+            var endTime = parseInt(url_parts.query.end);
+            finalMatchObject = {$match : {"values.time" : {$lte : endTime, $gte : startTime}}};
         }
-        // set the end time if "end" is a paramater in the GET request
-        if (url_parts.query.hasOwnProperty("end")) {
-            var endTime = url_parts.query.end;
-            if (!findProjectionObject.hasOwnProperty("values")) {
-                findProjectionObject.values = { $elemMatch: { time: {} } };
-            }
-            findProjectionObject.values.$elemMatch.time.$lte = endTime;
+        // only start time is a paramater
+        else if (url_parts.query.hasOwnProperty("start")) {
+            var startTime = parseInt(url_parts.query.start);
+            finalMatchObject = {$match : {"values.time" : {$gte : startTime}}};
         }
-        // limit the result count if "count" is a paramater in the GET request
-        /*if (url_parts.query.hasOwnProperty("count")) {
-            findProjectionObject.limit = url_parts.query.count;
-        }*/
+        // only end time is a paramater
+        else if (url_parts.query.hasOwnProperty("end")) {
+            var endTime = parseInt(url_parts.query.end);
+            finalMatchObject = {$match : {"values.time" : {$lte : endTime}}};
+        }
     }
 
     if (paramatersValid) {
         mongoClient.connect(mongoUrl, function (mongoError, db) {
             var objectsCollection = db.collection('objects');
             if (!mongoError) {
-                //console.log(findQueryObject);
-                console.log(findProjectionObject);
-                console.log(findProjectionObject.values.$elemMatch.time);
                 // get all the stock's symbols and names from the table
-                objectsCollection.find(findQueryObject, findProjectionObject).toArray(function (err, result) {
-                    // build the response object
-                    var responseObject = {};
-                    responseObject.values = result;
-                    responseObject.status = "success";
-                    responseObject.reason = "";
-                    // send the response in JSON format
+                objectsCollection.aggregate([firstMatchObject, { $unwind : "$values" }, finalMatchObject]).toArray(function (err, result) {
                     res.setHeader('Content-Type', 'application/json');
-                    res.send(JSON.stringify(responseObject));
+                    res.send(JSON.stringify(result));
                     db.close();
                 });
             }
