@@ -136,12 +136,14 @@ objectsRouter.use(function (req, res, next) {
                 // grab the objects from the table (include the values also if specified they're wanted in the query).
                 var objectsArray = Array();
                 for(var i = 0; i < result.length; i++) {
-                    if(!includeObjectValues) {
-                        objectsArray.push({name: result[i].name});
+                    var singleObject = {};
+                    for(var propertyName in result[i]) {
+                        if(propertyName != "values" || includeObjectValues) {
+                            singleObject[propertyName] = result[i][propertyName];
+                        }
                     }
-                    else {
-                        objectsArray.push({name: result[i].name, values: result[i].values});
-                    }
+
+                    objectsArray.push(singleObject);
                 }
 
                 res.setHeader('Content-Type', 'application/json');
@@ -228,7 +230,7 @@ valuesRouter.use(function (req, res, next) {
     var url = require('url');
     var url_parts = url.parse(req.originalUrl, true);
 
-    var finalMatchObject;
+    var finalMatchObject = null;
     var firstMatchObject = {$match: {}};
 
     var paramatersValid = false;
@@ -257,12 +259,19 @@ valuesRouter.use(function (req, res, next) {
         }
     }
 
+    var aggregateArray =  Array();
+    aggregateArray.push(firstMatchObject);
+    aggregateArray.push({ $unwind : "$values" });
+    if(finalMatchObject != null) {
+        aggregateArray.push(finalMatchObject);
+    }
+
     if (paramatersValid) {
         mongoClient.connect(mongoUrl, function (mongoError, db) {
             var objectsCollection = db.collection('objects');
             if (!mongoError) {
                 // get all the stock's symbols and names from the table
-                objectsCollection.aggregate([firstMatchObject, { $unwind : "$values" }, finalMatchObject]).toArray(function (err, result) {
+                objectsCollection.aggregate(aggregateArray).toArray(function (err, result) {
                     res.setHeader('Content-Type', 'application/json');
                     res.send(JSON.stringify(result));
                     db.close();
@@ -330,9 +339,9 @@ var insertPredictorThenPrediction = function (db, callback, predictionCreateObje
 app.use('/createprediction', createPredictionRouter);
 createPredictionRouter.use(function (req, res, next) {*/
 app.post('/createprediction', function(req, res) {
-    var url = require('url');
-    var url_parts = url.parse(req.originalUrl, true);
 
+    console.log(req.body);
+    
     // Make sure all of the required fields are in the request body
     if (req.body != null &&
         "predictor" in req.body &&

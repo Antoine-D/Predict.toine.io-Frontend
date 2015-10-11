@@ -42,29 +42,27 @@
           </select>
         </p>
         <p>
-          $<input id="p-value" type="number" style="width: 100px;" min="0" max="100.00"> <span style="font-size: 130%;">by</span> <input id="p-end-time" type="time"> <span style="font-size: 130%;">on</span>
+          $<input id="p-value" type="number" value="100.00" step="0.01" style="width: 100px;" min="0" max="100.00"> <span style="font-size: 130%;">by</span> <input id="p-end-time" type="time" value="13:33"> <span style="font-size: 130%;">on</span>
         </p>
         <p>
-          <select id="p-end-month">
-            <option>May</option>
-            <option>June</option>
-          </select>
-          <input id="p-end-day" type="number" style="width: 50px;" min="1" max="31">
-          <input id="p-end-year" type="number" style="width: 70px;" min="2015" max="2016">
-        </p>
+          <select id="p-end-year"></select>
+          <select id="p-end-month"></select>
+          <select id="p-end-day"></select>
         <p>
-            <input id="p-predictor" type="text">
+            <input id="p-predictor" placeholder="Email or identity phrase" type="text">
         </p>
 
         <button id="p-create-button" class="btn btn-lg btn-custom main-button">Create Prediction</button>
       </div>
 
-      <form id="prediction-creation-form" action="http://104.131.219.239:3060/createprediction" style="display: none;">
+      <form id="prediction-creation-form" action="http://104.131.219.239:3060/createprediction" method="post" style="display: none;">
           <input id="prediction-create-form-predictor" name="predictor" />
+          <input id="prediction-create-form-end" name="type" value="stock"/>
           <input id="prediction-create-form-object" name="object" />
           <input id="prediction-create-form-action" name="action" />
           <input id="prediction-create-form-value" name="value" />
           <input id="prediction-create-form-end" name="end" />
+
       </form>
 
       <footer style="display: none;" class="row">
@@ -92,13 +90,13 @@
 
   <script>
     $(document).ready(function() {
+        var monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 
         /**
           * When the prediction creation button is clicked, send the prediction 
           * data to the server.
           */
         $("#p-create-button").on("click", function() {
-            alert("create clicked");
             // clear the errors area
             $("#prediction-create-errors").html("");
             $("#prediction-create-errors").hide();
@@ -106,9 +104,9 @@
             var endYear = $("#p-end-year").val();
             var endMonth = $("#p-end-month").val();
             var endDay = $("#p-end-day").val();
-            var endTime = $("#p-end-time");
+            var endTime = $("#p-end-time").val();
             var predictor = $("#p-predictor").val();
-            var object = $("#p-object").val();
+            var object = $("#p-object").html();
             var action = $("#p-action").val();
             var value = $("#p-value").val();
             // check the required fields are all filled
@@ -123,23 +121,19 @@
                 && value.trim().length > 0) {
                 // create the end date object for the prediction end
                 var colonIndex = endTime.indexOf(":");
-                var hour = parseInt(0, endTime.trim().substring(colonIndex));
-                var minute = parseInt(endTime.trim().substring(colonIndex));
-                var endDate = new Date(endYear, endMonth, endDay, hour, minute, 0, 0);
+                var hour = parseInt(endTime.substring(0, colonIndex));
+                var minute = parseInt(endTime.substring(colonIndex + 1));
+                var endDate = new Date(parseInt(endYear), monthNames.indexOf(endMonth), parseInt(endDay), hour, minute, 0, 0);
 
-                // create the endpoint using the input values
-                /*var createPredictionUrl = "http://104.131.219.239:3060/createprediction?type=stock";
-                createPredictionUrl += "&predictor=";
-                createPredictionUrl += predictor;
-                createPredictionUrl += "&object=";
-                createPredictionUrl += object;
-                createPredictionUrl += "&action=";
-                createPredictionUrl += action;
-                createPredictionUrl += "&value=";
-                createPredictionUrl += value;
-                createPredictionUrl += "&end=";
-                createPredictionUrl += endDate.getTime();*/
+                console.log(parseInt(endYear));
+                console.log(monthNames.indexOf(endMonth));
+                console.log(parseInt(endDay));
+                console.log(hour);
+                console.log(minute);
+
+
                 
+                console.log(endDate);
                 // fill out prediction creation form and post it to the server
                 $("#prediction-create-form-predictor").val(predictor);
                 $("#prediction-create-form-object").val(object);
@@ -163,7 +157,7 @@
                     errorMessage += "Prediction end Day input was left blank.";
                     errorMessage += "<br/>";
                 }
-                if (endTime.trim().length == 0 || endTime.indexOf(":") > -1) {
+                if (endTime.trim().length == 0 || endTime.indexOf(":") == -1) {
                     errorMessage += "Prediction end time input is not complete (make sure hour, minutes, and AM/PM is set.";
                     errorMessage += "<br/>";
                 }
@@ -183,11 +177,78 @@
                     errorMessage += "The price of the stock was left blank.";
                     errorMessage += "<br/>";
                 }
-
+                alert(errorMessage);
                 $("#prediction-create-errors").html(errorMessage);
                 $("#prediction-create-errors").show();
             }
         });
+
+        var populateEndDateMonthOptions = function(endYear) {
+          // clear current month options
+          $("#p-end-month").html("");
+          var startMonth = (endYear == (new Date()).getFullYear()) ? (new Date()).getMonth() : 0;
+          for(var monthIndex = startMonth; monthIndex < 12; monthIndex++) {
+            var monthOption = $("<option></option>");
+            monthOption.val(monthNames[monthIndex]);
+            monthOption.html(monthNames[monthIndex]);
+            $("#p-end-month").append(monthOption);
+          }
+        }
+
+        var populateDayOptions = function(endMonth) {
+          $("#p-end-day").html("");
+          var startDay = 1;
+          // if selected month is current month, then start day is current day
+          if(monthNames.indexOf(endMonth) == (new Date()).getMonth() &&
+            $("#p-end-year").val() == (new Date()).getFullYear()) {
+            startDay = (new Date()).getDate();
+          }
+          // get number of days in the month
+          var numberOfDaysInMonth = getNumberOfDaysInMonth(
+            $("#p-end-month").val(), 
+            $("#p-end-year").val());
+          // append the days onto the day dropdown
+          for(var dayIterator = startDay; dayIterator <= numberOfDaysInMonth; dayIterator++) {
+            var dayOption = $("<option></option>");
+            dayOption.val(dayIterator);
+            dayOption.html(dayIterator);
+            $("#p-end-day").append(dayOption);
+          }
+        }
+
+        var populateEndDateOptions = function() {
+          // clear the end date dropdowns
+          $("#p-end-day").html("");
+          $("#p-end-month").html("");
+          $("#p-end-year").html("");
+          // populate the end year dropdown
+          var currentDate = new Date();
+          var currentYearOption = $("<option></option>");
+          $(currentYearOption).val(currentDate.getFullYear());
+          $(currentYearOption).html(currentDate.getFullYear());
+          $("#p-end-year").append(currentYearOption);
+          var nextYearOption = $("<option></option>");
+          $(nextYearOption).val(currentDate.getFullYear() + 1);
+          $(nextYearOption).html(currentDate.getFullYear() + 1);
+          $("#p-end-year").append(nextYearOption);
+          // populate the end month dropdown
+          populateEndDateMonthOptions($("#p-end-year").val());
+          // populate the end day dropdown
+          populateDayOptions($("#p-end-month").val());
+        }
+
+        $("#p-end-month").on("change", function () {
+          populateDayOptions($(event.target).val());
+        });
+
+        $("#p-end-year").on("change", function () {
+          populateEndDateMonthOptions($("#p-end-year").val());
+          populateDayOptions($(event.target).val());
+        });
+
+        var getNumberOfDaysInMonth = function(month, year) {
+          return (new Date(parseInt(year), monthNames.indexOf(month)+1, 0)).getDate();
+        }
 
         $("#selected-symbol").on("change", function () {
             var selectedSymbol = $("#selected-symbol").val();
@@ -202,6 +263,7 @@
             console.log("NOW TimeL " + nowTime);
             populatePriceHistoryGraph($(event.target).val(), yesterdayTime, nowTime);
 
+            populateEndDateOptions();
             $("#stock-price-history").show();
             $("#prediction-sentence").show();
         
@@ -235,7 +297,7 @@
             var stocksList = JSON.parse(rawStocksInfoData).objects;
             // sort the stocks info data array by symbol
             stocksList.sort(function (stockA, stockB) {
-                return stockA.name.localeCompare(stockB.name);
+                return stockA.object.localeCompare(stockB.object);
             });
             // clear the dropdown
             $("#selected-symbol").html("");
@@ -245,8 +307,8 @@
             // populate the countries dropdown
             for(var i = 0; i < stocksList.length; i++) {
               var stockInfoOption = $("<option></option>");
-              $(stockInfoOption).val(stocksList[i].name);
-              $(stockInfoOption).html(stocksList[i].name + " " + stocksList[i].company);
+              $(stockInfoOption).val(stocksList[i].object);
+              $(stockInfoOption).html(stocksList[i].object + " " + stocksList[i].company);
               $("#selected-symbol").append(stockInfoOption);
             }
           }
