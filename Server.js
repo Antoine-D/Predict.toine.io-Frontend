@@ -30,7 +30,7 @@ app.get('/prediction',function(req,res) {
 });
 
 // update the stocks every 1 minuite
-schedule.scheduleJob('01 * * * * *', function() {
+/*schedule.scheduleJob('01 * * * * *', function() {
     var YQL = require('yql');
     var queryString = "select * from yahoo.finance.quote where symbol in ('AAPL') "
     var queryYQL = new YQL(queryString);
@@ -63,7 +63,7 @@ schedule.scheduleJob('01 * * * * *', function() {
     });
 
     //console.log("been 1 minutes");
-});
+});*/
 
 // Static files
 app.use("/assets", express.static(__dirname + '/assets'));
@@ -129,8 +129,6 @@ objectsRouter.use(function (req, res, next) {
 
         var objectsCollection = db.collection('objects');
         if (!mongoError) {
-
-            console.log(findQueryObject);
             objectsCollection.find(findQueryObject).toArray(function (err, result) {
                 // grab the objects from the table (include the values also if specified they're wanted in the query).
                 var objectsArray = Array();
@@ -298,8 +296,6 @@ var insertPrediction = function (res, db, predictorId, predictionCreateObject) {
         start: currentTime,
         end: predictionCreateObject.end
     }, function (err, result) {
-        console.log("Inserted a prediction");
-        console.log(result.ops[0]);
         db.close();
         // redirect user the the new prediction
         res.writeHead(301, { Location: "http://104.131.219.239:3060/predictions?id=" + result.ops[0]._id });
@@ -317,8 +313,6 @@ var insertPredictorThenPrediction = function (res, db, callback, predictionCreat
     db.collection('predictors').insertOne({
         predictor: predictionCreateObject.predictor
     }, function (err, result) {
-        console.log("Inserted a predictor");
-        console.log(result);
         callback(res, db, result.ops[0]._id, predictionCreateObject);
     });
 };
@@ -349,11 +343,10 @@ app.post('/createprediction', function(req, res) {
         predictionCreateObject.object = req.body.object;
         predictionCreateObject.value = req.body.value;
         predictionCreateObject.action = req.body.action;
-        predictionCreateObject.end = req.body.end;
-
+        predictionCreateObject.end = parseInt(req.body.end);
         // insert the prediction
         mongoClient.connect(mongoUrl, function (mongoError, db) {
-            var predictorCollection = db.collection('predictor');
+            var predictorCollection = db.collection('predictors');
             if (!mongoError) {
                 // check to see if the predictor exists in the predictor collection
                 predictorCollection.find({ predictor: predictionCreateObject.predictor }).toArray(function (err, result) {

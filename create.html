@@ -57,12 +57,11 @@
 
       <form id="prediction-creation-form" action="http://104.131.219.239:3060/createprediction" method="post" style="display: none;">
           <input id="prediction-create-form-predictor" name="predictor" />
-          <input id="prediction-create-form-end" name="type" value="stock"/>
+          <input id="prediction-create-form-type" name="type" value="stock"/>
           <input id="prediction-create-form-object" name="object" />
           <input id="prediction-create-form-action" name="action" />
           <input id="prediction-create-form-value" name="value" />
           <input id="prediction-create-form-end" name="end" />
-
       </form>
 
       <footer style="display: none;" class="row">
@@ -125,19 +124,13 @@
                 var minute = parseInt(endTime.substring(colonIndex + 1));
                 var endDate = new Date(parseInt(endYear), monthNames.indexOf(endMonth), parseInt(endDay), hour, minute, 0, 0);
 
-                console.log(parseInt(endYear));
-                console.log(monthNames.indexOf(endMonth));
-                console.log(parseInt(endDay));
-                console.log(hour);
-                console.log(minute);
-                
-                console.log(endDate);
                 // fill out prediction creation form and post it to the server
                 $("#prediction-create-form-predictor").val(predictor);
                 $("#prediction-create-form-object").val(object);
                 $("#prediction-create-form-action").val(action);
                 $("#prediction-create-form-value").val(value);
-                $("#prediction-create-form-end").val(Math.floor(new Date().getTime() / 1000).toString());
+                var endDateUnixTime = Math.floor(endDate.getTime() / 1000);
+                $("#prediction-create-form-end").val(endDateUnixTime);
                 $("#prediction-creation-form").submit();
             }
 
@@ -257,8 +250,6 @@
             // and the epoch time 24 hours hours ago.
             var nowTime = parseInt((new Date).getTime()/1000);
             var yesterdayTime = parseInt((new Date).getTime()/1000) - (24*60*60);
-            console.log("Yesterda TimeL " + yesterdayTime);
-            console.log("NOW TimeL " + nowTime);
             populatePriceHistoryGraph($(event.target).val(), yesterdayTime, nowTime);
 
             populateEndDateOptions();
