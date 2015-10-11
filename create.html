@@ -130,8 +130,6 @@
                 console.log(parseInt(endDay));
                 console.log(hour);
                 console.log(minute);
-
-
                 
                 console.log(endDate);
                 // fill out prediction creation form and post it to the server
@@ -139,7 +137,7 @@
                 $("#prediction-create-form-object").val(object);
                 $("#prediction-create-form-action").val(action);
                 $("#prediction-create-form-value").val(value);
-                $("#prediction-create-form-end").val(endDate.getTime());
+                $("#prediction-create-form-end").val(Math.floor(new Date().getTime() / 1000).toString());
                 $("#prediction-creation-form").submit();
             }
 

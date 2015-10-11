@@ -87,7 +87,6 @@ objectsRouter.use(function (req, res, next) {
     var url = require('url');
     var url_parts = url.parse(req.originalUrl, true);
 
-    var queryOptions = {};
     var findQueryObject = {};
 
     var paramatersValid = false;
@@ -169,24 +168,18 @@ predictionsRouter.use(function (req, res, next) {
     var url = require('url');
     var url_parts = url.parse(req.originalUrl, true);
 
-    var queryOptions = {};
     var findQueryObject = {};
-
     var paramatersValid = false;
 
     // grab the "id" paramater from the GET request
     if (url_parts.query.hasOwnProperty("id")) {
-        findQueryObject.id = url_parts.query.id;
+        findQueryObject._id = new mongodb.ObjectID(String(url_parts.query.id));
         paramatersValid = true;
     }
 
     // grab the "predictor" paramater from the GET request
     if (url_parts.query.hasOwnProperty("predictor")) {
         findQueryObject.predictor = url_parts.query.predictor;
-
-        if (url_parts.query.hasOwnProperty("count")) {
-            queryOptions.limit = url_parts.query.count;
-        }
         paramatersValid = true;
     }
 
@@ -195,7 +188,7 @@ predictionsRouter.use(function (req, res, next) {
             var predictionsCollection = db.collection('predictions');
             if (!mongoError) {
                 // get all the stock's symbols and names from the table
-                predictionsCollection.find(findQueryObject, queryOptions).toArray(function (err, result) {
+                predictionsCollection.find(findQueryObject).toArray(function (err, result) {
                     // build the response object
                     var responseObject = {};
                     responseObject.predictions = result;
@@ -294,7 +287,7 @@ valuesRouter.use(function (req, res, next) {
 /**
   * Insert a prediction into the predictions collection
   */
-var insertPrediction = function (db, predictorId, predictionCreateObject) {
+var insertPrediction = function (res, db, predictorId, predictionCreateObject) {
     var currentTime = Math.floor(new Date().getTime() / 1000);
     db.collection('predictions').insertOne({
         predictor_id: predictorId,
@@ -306,10 +299,10 @@ var insertPrediction = function (db, predictorId, predictionCreateObject) {
         end: predictionCreateObject.end
     }, function (err, result) {
         console.log("Inserted a prediction");
-        console.log(result);
+        console.log(result.ops[0]);
         db.close();
         // redirect user the the new prediction
-        res.writeHead(301, { Location: "http://104.131.219.239:3030/predictions?id=" + result._id });
+        res.writeHead(301, { Location: "http://104.131.219.239:3060/predictions?id=" + result.ops[0]._id });
         res.end();
         /*res.setHeader('Content-Type', 'application/json');
         res.send(JSON.stringify({ status: "success", record: result }));*/
@@ -320,14 +313,13 @@ var insertPrediction = function (db, predictorId, predictionCreateObject) {
 /**
   * Insert a prediction into the predictions collection
   */
-var insertPredictorThenPrediction = function (db, callback, predictionCreateObject) {
-    var currentTime = Math.floor(milliseconds / 1000);
+var insertPredictorThenPrediction = function (res, db, callback, predictionCreateObject) {
     db.collection('predictors').insertOne({
         predictor: predictionCreateObject.predictor
     }, function (err, result) {
         console.log("Inserted a predictor");
         console.log(result);
-        callback(db, result._id, predictionCreateObject);
+        callback(res, db, result.ops[0]._id, predictionCreateObject);
     });
 };
 
@@ -368,6 +360,7 @@ app.post('/createprediction', function(req, res) {
                     // if the predictor exists, then insert prediction with the retreived predictor _id
                     if (result.length > 0) {
                         insertPrediction(
+                            res,
                             db,
                             result[0]._id,
                             predictionCreateObject);
@@ -375,9 +368,10 @@ app.post('/createprediction', function(req, res) {
                     // if the predictor doesn't exist, then insert the predictor and then insert the prediction
                     else {
                         insertPredictorThenPrediction(
+                            res,
                             db,
-                            function (db, predictorId, predictionObject) {
-                                insertPrediction(db, predictorId, predictionObject)
+                            function (res, db, predictorId, predictionObject) {
+                                insertPrediction(res, db, predictorId, predictionObject)
                             },
                             predictionCreateObject);
                     }
