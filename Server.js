@@ -48,29 +48,32 @@ schedule.scheduleJob('01 * * * * *', function() {
                     thisQueriesSymbols.push(symbols[symbolIndex]);
                 }
 
-                var queryString = "select * from yahoo.finance.quote where symbol in ('" + thisQueriesSymbols.join("','") + "') ";
+                // delay the query in order to create even distribution of queries over the entire minute period
+                // (send a query every 2 seconds)
+                setTimeout(function() {
+                    var queryString = "select * from yahoo.finance.quote where symbol in ('" + thisQueriesSymbols.join("','") + "') ";
+                    var queryYQL = new YQL(queryString);
 
-                var queryYQL = new YQL(queryString);
+                    queryYQL.exec(function(err, data) {
+                        for(var resultIndex = 0; resultIndex < data.query.results.quote.length; resultIndex++) {
+                            var thisQuote = data.query.results.quote[resultIndex];
+                            var currentTime = Math.floor((new Date).getTime() / 60000)*60;
+                            console.log(thisQuote);
 
-                queryYQL.exec(function(err, data) {
-                    for(var resultIndex = 0; resultIndex < data.query.results.quote.length; resultIndex++) {
-                        var thisQuote = data.query.results.quote[resultIndex];
-                        var currentTime = Math.floor((new Date).getTime() / 60000)*60;
-                        console.log(thisQuote);
-
-                        objectsCollection.updateOne(
-                            { object:  thisQuote.symbol},
-                            { $push: {
-                                values: {
-                                    $each: [{
-                                        value: thisQuote.LastTradePriceOnly, 
-                                        time: currentTime} 
-                                    ] 
-                                } 
-                            }},
-                            function(err, results) {});
-                    }
-                });
+                            objectsCollection.updateOne(
+                                { object:  thisQuote.symbol},
+                                { $push: {
+                                    values: {
+                                        $each: [{
+                                            value: thisQuote.LastTradePriceOnly, 
+                                            time: currentTime} 
+                                        ] 
+                                    } 
+                                }},
+                                function(err, results) {});
+                        }
+                    });
+                }, queryIndex * 2000);
             }
         }
     });
