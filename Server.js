@@ -180,63 +180,46 @@ predictionsRouter.use(function (req, res, next) {
 var valuesRouter = express.Router();
 app.use('/values', valuesRouter);
 valuesRouter.use(function (req, res, next) {
+    // go through the parmaters, appending to the find object that will search for 
+    // the values in the values collection.
+    var findQueryObject = {};
     var url = require('url');
     var url_parts = url.parse(req.originalUrl, true);
-
-    var finalMatchObject = null;
-    var firstMatchObject = {$match: {}};
-
-    var paramatersValid = false;
-
+    
     // grab the "type" and "object" paramater from the GET request
     if (url_parts.query.hasOwnProperty("type") &&
         url_parts.query.hasOwnProperty("object")) {
-        firstMatchObject.$match.type = url_parts.query.type;
-        firstMatchObject.$match.object = url_parts.query.object;
+        findQueryObject.type = url_parts.query.type;
+        findQueryObject.object = url_parts.query.object;
         paramatersValid = true;
-        // both start and end time are paramaters
-        if (url_parts.query.hasOwnProperty("start") && url_parts.query.hasOwnProperty("end")) {
+        // create time search object to match times within range
+        
+        // get start time (lower bound) if it's a paramater
+        if (url_parts.query.hasOwnProperty("start")) {
+            if(!findQueryObject.hasOwnProperty("time")) {
+                findQueryObject.time = {};
+            }
             var startTime = parseInt(url_parts.query.start);
+            findQueryObject.time.$gte = startTime;
+        }
+        // get end time (upper bound) if it's a paramater
+        if (url_parts.query.hasOwnProperty("end")) {
+            if(!findQueryObject.hasOwnProperty("time")) {
+                findQueryObject.time = {};
+            }
             var endTime = parseInt(url_parts.query.end);
-            finalMatchObject = {$match : {"values.time" : {$lte : endTime, $gte : startTime}}};
+            findQueryObject.time.$lte = endTime;
         }
-        // only start time is a paramater
-        else if (url_parts.query.hasOwnProperty("start")) {
-            var startTime = parseInt(url_parts.query.start);
-            finalMatchObject = {$match : {"values.time" : {$gte : startTime}}};
-        }
-        // only end time is a paramater
-        else if (url_parts.query.hasOwnProperty("end")) {
-            var endTime = parseInt(url_parts.query.end);
-            finalMatchObject = {$match : {"values.time" : {$lte : endTime}}};
-        }
-    }
-
-    var aggregateArray =  Array();
-    aggregateArray.push(firstMatchObject);
-    aggregateArray.push({ $unwind : "$values" });
-    if(finalMatchObject != null) {
-        aggregateArray.push(finalMatchObject);
     }
 
     if (paramatersValid) {
         if (!mongoError) {
-            var objectsCollection = db.collection('objects');
-            // get all the stock's symbols and names from the table
-            objectsCollection.aggregate(aggregateArray).toArray(function (err, result) {
+            var valuesCollection = db.collection('values');
+            valuesCollection.find(findQueryObject).toArray(function (err, result) {
                 res.setHeader('Content-Type', 'application/json');
                 res.send(JSON.stringify(result));
             });
         }
-        else {
-            res.setHeader('Content-Type', 'application/json');
-            res.send(JSON.stringify({ status: "failed", reason: "Error occured during database query." }));
-        }
-    }
-
-    else {
-        res.setHeader('Content-Type', 'application/json');
-        res.send(JSON.stringify({ status: "failed", reason: "Required paramaters are missing." }));
     }
 });
 
@@ -258,8 +241,6 @@ var insertPrediction = function (res, predictorCypher, predictionCreateObject) {
         // redirect user the the new prediction
         res.writeHead(301, { Location: "http://104.131.219.239:3060/predictions?id=" + result.ops[0]._id });
         res.end();
-        /*res.setHeader('Content-Type', 'application/json');
-        res.send(JSON.stringify({ status: "success", record: result }));*/
     });
 };
 
