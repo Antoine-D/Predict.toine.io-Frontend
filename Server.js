@@ -18,37 +18,47 @@ mongoClient.connect(mongoUrl, function (error, database) {
     console.log("starting....");
 });
 
+/* Encryption tools */
+var crypto = require('crypto'),
+    algorithm = 'aes-256-ctr',
+    password = 'q9A7Xgls';
+
+function encrypt(text) {
+    var cipher = crypto.createCipher(algorithm, password)
+    var crypted = cipher.update(text, 'utf8', 'hex')
+    crypted += cipher.final('hex');
+    return crypted;
+}
+
+function decrypt(text) {
+    var decipher = crypto.createDecipher(algorithm, password)
+    var dec = decipher.update(text, 'hex', 'utf8')
+    dec += decipher.final('utf8');
+    return dec;
+}
+
 // configuring express to use body-parser as middle-ware.
 app.use(bodyParser.urlencoded({ extended: false }));
 
+/* Serving static files */
+// serve the home page (used for nav and to search predictions by predictor
 app.get('/',function(req,res) {
     res.sendFile(path.join(__dirname+"/index.html"));
 });
-
+// serves the create page (used to create a prediction)
 app.get('/create',function(req,res) {
     res.sendFile(path.join(__dirname+"/create.html"));
 });
-
+// serves the predictor page (displays all predictions created by a predictor)
 app.get('/predictor',function(req,res) {
     res.sendFile(path.join(__dirname+"/predictor.html"));
 });
-
+// serves the prediction page (displays a single prediction)
 app.get('/prediction',function(req,res) {
     res.sendFile(path.join(__dirname+"/prediction.html"));
 });
 
-// Static files
 app.use("/assets", express.static(__dirname + '/assets'));
-
-// predictions
-var prediction = { predictor_id: "507f1f77bcf86cd799439011", type: "stock", object: "AAPL", value: 101.10, action: "rise above", start: 1444000001, end: 1444100000 };
-
-// predictors
-var predictor = { predictor: "anemail@gmail.com" };
-
-// objects' values
-var object = { type: "", object: "", values: [{ time: 1444000001, value: 9.77 }, { time: 1444000061, value: 9.72 }] };
-var stockObject = { type: "stock", object: "AAPL", company: "Apple Inc.", values: [{ time: 1444000001, value: 109.77 }, { time: 1444000061, value: 109.72 }] };
 
 /** 
   * Get all objects of the given type
@@ -100,21 +110,8 @@ objectsRouter.use(function (req, res, next) {
         if (!mongoError) {
             var objectsCollection = db.collection('objects');
             objectsCollection.find(findQueryObject).toArray(function (err, result) {
-                // grab the objects from the table (include the values also if specified they're wanted in the query).
-                var objectsArray = Array();
-                for(var i = 0; i < result.length; i++) {
-                    var singleObject = {};
-                    for(var propertyName in result[i]) {
-                        if(propertyName != "values" || includeObjectValues) {
-                            singleObject[propertyName] = result[i][propertyName];
-                        }
-                    }
-
-                    objectsArray.push(singleObject);
-                }
-
                 res.setHeader('Content-Type', 'application/json');
-                res.send(JSON.stringify({objects: objectsArray}));
+                res.send(JSON.stringify({objects: result}));
             });
         }
     }
@@ -247,10 +244,10 @@ valuesRouter.use(function (req, res, next) {
 /**
   * Insert a prediction into the predictions collection
   */
-var insertPrediction = function (res, predictorId, predictionCreateObject) {
+var insertPrediction = function (res, predictorCypher, predictionCreateObject) {
     var currentTime = Math.floor(new Date().getTime() / 1000);
     db.collection('predictions').insertOne({
-        predictor_id: predictorId,
+        predictor: predictorCypher,
         type: predictionCreateObject.type,
         object: predictionCreateObject.object,
         value: predictionCreateObject.value,
@@ -271,10 +268,12 @@ var insertPrediction = function (res, predictorId, predictionCreateObject) {
   * Insert a prediction into the predictions collection
   */
 var insertPredictorThenPrediction = function (res, callback, predictionCreateObject) {
+    var predictorCypher = encrypt(predictionCreateObject.predictor);
     db.collection('predictors').insertOne({
-        predictor: predictionCreateObject.predictor
+        predictor: predictionCreateObject.predictor,
+        cypher: predictorCypher
     }, function (err, result) {
-        callback(res, result.ops[0]._id, predictionCreateObject);
+        callback(res, predictorCypher, predictionCreateObject);
     });
 };
 
@@ -282,9 +281,6 @@ var insertPredictorThenPrediction = function (res, callback, predictionCreateObj
 /**
   * Receive prediction creation posts and insert them in the collection
   */
-/*var createPredictionRouter = express.Router();
-app.use('/createprediction', createPredictionRouter);
-createPredictionRouter.use(function (req, res, next) {*/
 app.post('/createprediction', function(req, res) {
 
     console.log(req.body);
@@ -314,7 +310,7 @@ app.post('/createprediction', function(req, res) {
                 if (result.length > 0) {
                     insertPrediction(
                         res,
-                        result[0]._id,
+                        result[0].cypher,
                         predictionCreateObject);
                 }
                 // if the predictor doesn't exist, then insert the predictor and then insert the prediction
