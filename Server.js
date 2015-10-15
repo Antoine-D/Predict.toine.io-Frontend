@@ -185,6 +185,7 @@ valuesRouter.use(function (req, res, next) {
     var findQueryObject = {};
     var url = require('url');
     var url_parts = url.parse(req.originalUrl, true);
+    var paramatersValid = false;
     
     // grab the "type" and "object" paramater from the GET request
     if (url_parts.query.hasOwnProperty("type") &&
@@ -228,9 +229,10 @@ valuesRouter.use(function (req, res, next) {
   * Insert a prediction into the predictions collection
   */
 var insertPrediction = function (res, predictorCypher, predictionCreateObject) {
+    console.log(new Buffer(predictorCypher).toString('utf8'));
     var currentTime = Math.floor(new Date().getTime() / 1000);
     db.collection('predictions').insertOne({
-        predictor: predictorCypher,
+        predictor: new Buffer(predictorCypher).toString('utf8'),
         type: predictionCreateObject.type,
         object: predictionCreateObject.object,
         value: predictionCreateObject.value,
@@ -238,9 +240,16 @@ var insertPrediction = function (res, predictorCypher, predictionCreateObject) {
         start: currentTime,
         end: predictionCreateObject.end
     }, function (err, result) {
-        // redirect user the the new prediction
-        res.writeHead(301, { Location: "http://104.131.219.239:3060/predictions?id=" + result.ops[0]._id });
-        res.end();
+        if(typeof result != "undefined") {
+            // redirect user the the new prediction
+            res.writeHead(301, { Location: "http://104.131.219.239:3060/predictions?id=" + result.ops[0]._id });
+            res.end();
+        }
+        else {
+            res.setHeader('Content-Type', 'application/json');
+            res.send("Error");
+        }
+        
     });
 };
 
@@ -249,12 +258,12 @@ var insertPrediction = function (res, predictorCypher, predictionCreateObject) {
   * Insert a prediction into the predictions collection
   */
 var insertPredictorThenPrediction = function (res, callback, predictionCreateObject) {
-    var predictorCypher = encrypt(predictionCreateObject.predictor);
+    var predictorCipher = encrypt(predictionCreateObject.predictor);
     db.collection('predictors').insertOne({
         predictor: predictionCreateObject.predictor,
-        cypher: predictorCypher
+        cypher: new Buffer(predictorCipher).toString('utf8')
     }, function (err, result) {
-        callback(res, predictorCypher, predictionCreateObject);
+        callback(res, predictorCipher, predictionCreateObject);
     });
 };
 
@@ -289,17 +298,18 @@ app.post('/createprediction', function(req, res) {
             predictorCollection.find({ predictor: predictionCreateObject.predictor }).toArray(function (err, result) {
                 // if the predictor exists, then insert prediction with the retreived predictor _id
                 if (result.length > 0) {
+                    var predictorCipher = encrypt(result[0].predictor);
                     insertPrediction(
                         res,
-                        result[0].cypher,
+                        predictorCipher,
                         predictionCreateObject);
                 }
                 // if the predictor doesn't exist, then insert the predictor and then insert the prediction
                 else {
                     insertPredictorThenPrediction(
                         res,
-                        function (res, predictorId, predictionObject) {
-                            insertPrediction(res, db, predictorId, predictionObject)
+                        function (res, predictorCipher, predictionObject) {
+                            insertPrediction(res, predictorCipher, predictionObject)
                         },
                         predictionCreateObject);
                 }
