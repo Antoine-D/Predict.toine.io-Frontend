@@ -18,6 +18,13 @@
 
   <body>
 
+    <style>
+    /*.p-end-year {
+      width: ;
+    }*/
+
+    </style>
+
     <div class="container">
       <div class="jumbotron">
         <div>
@@ -32,24 +39,24 @@
       </div>
 
       <div id="prediction-sentence" class="jumbotron" style="display: none; font-size: 200%; margin-left: 0px; color: #53B981;">
-        <p>
+        <p class="form-inline">
           <span style="font-size: 130%;">I predict</span> <span id="p-object" style="background-color: black; color: #FFCC00; padding: 4px; border-radius: 4px;"></span> <span style="font-size: 130%;">will</span> 
-          <select id="p-action">
+          <select id="p-action" class="form-control" style="width: 30%">
             <option>reach above</option>
             <option>sink below</option>
             <option>stay above</option>
             <option>stay below</option>
           </select>
         </p>
-        <p>
+        <p class="form-inline">
           $<input id="p-value" type="number" value="100.00" step="0.01" style="width: 100px;" min="0" max="100.00"> <span style="font-size: 130%;">by</span> <input id="p-end-time" type="time" value="13:33"> <span style="font-size: 130%;">on</span>
         </p>
-        <p>
-          <select id="p-end-year"></select>
-          <select id="p-end-month"></select>
-          <select id="p-end-day"></select>
-        <p>
-            <input id="p-predictor" placeholder="Email or identity phrase" type="text">
+        <p class="form-inline">
+          <select id="p-end-year" class="form-control form-group" style="width: 30%"></select>
+          <select id="p-end-month" class="form-control form-group" style="width: 30%"></select>
+          <select id="p-end-day" class="form-control form-group" style="width: 30%"></select>
+        <p class="form-inline">
+            <input id="p-predictor" class="form-control" placeholder="Email or identity phrase" type="text">
         </p>
 
         <button id="p-create-button" class="btn btn-lg btn-custom main-button">Create Prediction</button>

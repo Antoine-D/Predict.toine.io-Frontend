@@ -163,13 +163,13 @@ predictionsRouter.use(function (req, res, next) {
         }
         else {
             res.setHeader('Content-Type', 'application/json');
-            res.send(JSON.stringify({ status: "failed", reason: "Error occured during database query." }));
+            res.send(JSON.stringify({ status: "failure", reason: "Error occured during database query." }));
         }
     }
 
     else {
         res.setHeader('Content-Type', 'application/json');
-        res.send(JSON.stringify({ status: "failed", reason: "Required paramaters are missing."}));
+        res.send(JSON.stringify({ status: "failure", reason: "Required paramaters are missing."}));
     }
 });
 
@@ -211,6 +211,14 @@ valuesRouter.use(function (req, res, next) {
             var endTime = parseInt(url_parts.query.end);
             findQueryObject.time.$lte = endTime;
         }
+        // get end time (upper bound) if it's a paramater
+        if (url_parts.query.hasOwnProperty("end")) {
+            if(!findQueryObject.hasOwnProperty("time")) {
+                findQueryObject.time = {};
+            }
+            var endTime = parseInt(url_parts.query.end);
+            findQueryObject.time.$lte = endTime;
+        }
     }
 
     if (paramatersValid) {
@@ -238,7 +246,8 @@ var insertPrediction = function (res, predictorCypher, predictionCreateObject) {
         value: predictionCreateObject.value,
         action: predictionCreateObject.action,
         start: currentTime,
-        end: predictionCreateObject.end
+        end: predictionCreateObject.end,
+        status: "active"
     }, function (err, result) {
         if(typeof result != "undefined") {
             // redirect user the the new prediction

@@ -114,3 +114,21 @@ h2 .symbol {
   font-size: 180%;
   height: 180%;
 }
+
+#prediction-sentence p {
+  text-align: left;
+}
+
+@media (min-width: 768px) {
+  #prediction-sentence p {
+    text-align: center;
+  }
+
+  #p-predictor {
+    margin-left: 15%;
+    width: 70%
+  }
+
+}
+
+
