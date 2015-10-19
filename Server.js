@@ -53,15 +53,34 @@ app.get('/create',function(req,res) {
 app.get('/predictor',function(req,res) {
     res.sendFile(path.join(__dirname+"/predictor.html"));
 });
-// serves the prediction page (displays a single prediction)
-app.get('/prediction',function(req,res) {
-    res.sendFile(path.join(__dirname+"/prediction.html"));
-});
 
 app.use("/assets", express.static(__dirname + '/assets'));
 
 /** 
-  * Get all objects of the given type
+  * Predictors router
+  */
+var predictorRouter = express.Router();
+app.use('/predictors', predictorRouter);
+predictorRouter.use(function (req, res, next) {
+    var url = require('url');
+    var url_parts = url.parse(req.originalUrl, true);
+
+    var findQueryObject = {};
+    var paramatersValid = false;
+
+    // grab the "type" paramater from the GET request
+    if (url_parts.query.hasOwnProperty("name")) {
+        findQueryObject.type = url_parts.query.type;
+        paramatersValid = true;
+    }
+    else if (url_parts.query.hasOwnProperty("id")) {
+        findQueryObject.type = url_parts.query.type;
+        paramatersValid = true;
+    }
+});
+
+/** 
+  * Objects Router (search for objects and assosiated attributes)
   */
 var objectsRouter = express.Router();
 app.use('/objects', objectsRouter);
@@ -99,11 +118,21 @@ objectsRouter.use(function (req, res, next) {
 });
 
 /** 
-  * Predictions router
+  * Prediction router (for single prediction (serves a page))
+  */
+var predictionRouter = express.Router();
+app.use('/prediction', predictionRouter);
+predictionRouter.use(function (req, res, next) {
+    res.sendFile(path.join(__dirname+"/prediction.html"));
+});
+
+/** 
+  * Predictions router (for getting predictions as JSON)
   */
 var predictionsRouter = express.Router();
 app.use('/predictions', predictionsRouter);
 predictionsRouter.use(function (req, res, next) {
+    res.setHeader('Content-Type', 'application/json');
     var url = require('url');
     var url_parts = url.parse(req.originalUrl, true);
 
@@ -112,8 +141,11 @@ predictionsRouter.use(function (req, res, next) {
 
     // grab the "id" paramater from the GET request
     if (url_parts.query.hasOwnProperty("id")) {
-        findQueryObject._id = new mongodb.ObjectID(String(url_parts.query.id));
-        paramatersValid = true;
+        var checkForHexRegExp = new RegExp("^[0-9a-fA-F]{24}$");
+        if(checkForHexRegExp.test(String(url_parts.query.id))) {
+            findQueryObject._id = new mongodb.ObjectID(String(url_parts.query.id));
+            paramatersValid = true;
+        }
     }
 
     // grab the "predictor" paramater from the GET request
@@ -127,24 +159,16 @@ predictionsRouter.use(function (req, res, next) {
             var predictionsCollection = db.collection('predictions');
             // get all the stock's symbols and names from the table
             predictionsCollection.find(findQueryObject).toArray(function (err, result) {
-                // build the response object
-                var responseObject = {};
-                responseObject.predictions = result;
-                responseObject.status = "success";
-                responseObject.reason = "";
                 // send the response in JSON format
-                res.setHeader('Content-Type', 'application/json');
-                res.send(JSON.stringify(responseObject));
+                res.send(JSON.stringify(result));
             });
         }
         else {
-            res.setHeader('Content-Type', 'application/json');
             res.send(JSON.stringify({ status: "failure", reason: "Error occured during database query." }));
         }
     }
 
     else {
-        res.setHeader('Content-Type', 'application/json');
         res.send(JSON.stringify({ status: "failure", reason: "Required paramaters are missing."}));
     }
 });
