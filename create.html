@@ -34,8 +34,8 @@
       </div>
 
       <div id="stock-price-history" class="jumbotron" style="display: none;">
-        <h3 style="text-align: center;"><span id="chart-header-symbol" style="color: #53B981;"></span> Stock Price Past 24 Hours</h3>
-          <div id="price-history-chart" style="min-width: 310px; height: 400px; margin: 0 auto; padding-bottom: 10px;"></div>
+        <h3 style="text-align: center;"><span id="chart-header-symbol" style="color: #53B981;"></span> Stock Price Over the Past 24 Hours</h3>
+        <div id="price-history-chart" style="min-width: 310px; height: 400px; margin: 0 auto; padding-bottom: 10px;"></div>
       </div>
 
       <div id="prediction-sentence" class="jumbotron" style="display: none; font-size: 200%; margin-left: 0px; color: #53B981;">
@@ -253,11 +253,12 @@
             $("#p-object").html(selectedSymbol);
             $("#chart-header-symbol").html(selectedSymbol);
             
-            // populate the price history graph using the stock symbol, the epoch time now, 
-            // and the epoch time 24 hours hours ago.
+            // populate the price history graph with the recorded prices over the past 24 hours
             var nowTime = parseInt((new Date).getTime()/1000);
-            var yesterdayTime = parseInt((new Date).getTime()/1000) - (24*60*60);
-            populatePriceHistoryGraph($(event.target).val(), yesterdayTime, nowTime);
+            var twentyFourHoursAgoTime = nowTime - (24*60*60);
+            populatePriceHistoryGraph($(event.target).val(), 
+              twentyFourHoursAgoTime,
+              nowTime);
 
             populateEndDateOptions();
             $("#stock-price-history").show();
@@ -322,10 +323,9 @@
         $('#price-history-chart').highcharts({});
         
         // create the endpoint GET url with params
-        var stockPricesEndpoint = "http://104.131.219.239:3060/objects?type=stock";
+        var stockPricesEndpoint = "http://104.131.219.239:3060/values?type=stock";
         stockPricesEndpoint += "&object=";
         stockPricesEndpoint += encodeURIComponent(String(symbol).trim());
-        stockPricesEndpoint += "&includeValues=y";
         stockPricesEndpoint += "&start=";
         stockPricesEndpoint += encodeURIComponent(String(startDateTime).trim());
         stockPricesEndpoint += "&end=";
@@ -338,26 +338,35 @@
           // if the status is correct, attempt to parse the response as an object
           if(xmlhttp.readyState==4 && xmlhttp.status==200) {
               var rawstockPriceHistory = xmlhttp.responseText;
-              var stockPriceHistory = JSON.parse(rawstockPriceHistory).objects;
-              console.log(stockPriceHistory);
+              var stockPriceHistory = JSON.parse(rawstockPriceHistory);
+              //console.log(stockPriceHistory);
               // create seperate lists for prices and dates
               var prices = Array();
               var times = Array(); // epoch times
               for (var i = 0; i < stockPriceHistory.length; i++) {
-                  prices.push(stockPriceHistory[i].value);
-                  times.push(stockPriceHistory[i].time);
+                  // add the price to the prices array
+                  prices.push(parseFloat(stockPriceHistory[i].value));
+                  // get the time the price was recorded and add it to the time list
+                  var priceDate = new Date(0);
+                  priceDate.setSeconds(stockPriceHistory[i].time);
+                  var priceHour = priceDate.getHours();
+                  var priceMinute = priceDate.getMinutes();
+                  var timeSeperator = (priceMinute >= 10) ? ":" : ":0"; // pad with 0 if minute less than 10
+                  times.push(priceHour.toString() + timeSeperator + priceMinute.toString());
               }
               // draw the graph using the times (x-axis) and prices (y-axis)
-              drawPriceGraph(times, prices);
+              drawPriceGraph(symbol, times, prices);
           }
         }
 
         xmlhttp.send();
       };
 
-      var drawPriceGraph = function (times, prices) {
+      var drawPriceGraph = function (symbol, times, prices) {
+        console.log(times);
+        console.log(prices);
           // populate the chart
-          $('#stock-price-history').highcharts({
+          $('#price-history-chart').highcharts({
               chart: {
                   zoomType: 'xy'
               },

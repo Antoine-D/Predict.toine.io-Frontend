@@ -70,9 +70,7 @@ objectsRouter.use(function (req, res, next) {
     var url_parts = url.parse(req.originalUrl, true);
 
     var findQueryObject = {};
-
     var paramatersValid = false;
-    var includeObjectValues = false;
 
     // grab the "type" paramater from the GET request
     if (url_parts.query.hasOwnProperty("type")) {
@@ -83,29 +81,7 @@ objectsRouter.use(function (req, res, next) {
     if (url_parts.query.hasOwnProperty("object")) {
         findQueryObject.object = url_parts.query.object;
     }
-    // grab the "includeValues" paramater from the GET request
-    if (url_parts.query.hasOwnProperty("includeValues") 
-        && url_parts.query.includeValues.toLowerCase() == "y") {
-        includeObjectValues = true;
-
-        // Check if the time interval is specified as a paramater
-        // which will dictate lower and upper bound of times of prices to fetch.
-        if (url_parts.query.hasOwnProperty("start")) {
-            var startTime = url_parts.query.start;
-            if (!findQueryObject.hasOwnProperty("values")) {
-                findQueryObject.values = { $elemMatch: { time: {} } };
-            }
-            findQueryObject.values.$elemMatch.time.$gte = startTime;
-        }
-        if (url_parts.query.hasOwnProperty("end")) {
-            var endTime = url_parts.query.end;
-            if (!findQueryObject.hasOwnProperty("values")) {
-                findQueryObject.values = { $elemMatch: { time: {} } };
-            }
-            findQueryObject.values.$elemMatch.time.$lte = endTime;
-        }
-    }
-
+    // if the paramaters are valid (have at least the object type, then )
     if (paramatersValid) {
         if (!mongoError) {
             var objectsCollection = db.collection('objects');
