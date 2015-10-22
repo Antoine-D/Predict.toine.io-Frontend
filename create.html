@@ -33,8 +33,21 @@
         </div>
       </div>
 
-      <div id="stock-price-history" class="jumbotron" style="display: none;">
-        <h3 style="text-align: center;"><span id="chart-header-symbol" style="color: #53B981;"></span> Stock Price Over the Past 24 Hours</h3>
+      <div id="stock-price-history" class="jumbotron" >
+          <h3 style="text-align: center;"><span id="chart-header-symbol" style="color: #53B981;"></span> Stock Price History</h3>
+        <div class="row">
+           <div class="col-md-4">
+               <!-- by default the 24 hour price history is selected -->
+               <button class="btn btn-custom chart-time-interval-button selected-chart-time-interval">Past 24 Hours</button>
+           </div>
+           <div class="col-md-4">
+              <button class="btn btn-custom chart-time-interval-button" style="">Past Month</button>
+           </div>
+           <div class="col-md-4">
+               <button class="btn btn-custom chart-time-interval-button">Past Year</button>
+           </div>
+        </div>
+        
         <div id="price-history-chart" style="min-width: 310px; height: 400px; margin: 0 auto; padding-bottom: 10px;">
         </div>
       </div>
@@ -97,7 +110,7 @@
   <script src="assets/js/shared.js"></script>
 
   <script>
-    $(document).ready(function() {
+      $(document).ready(function () {
         /**
           * When the prediction creation button is clicked, send the prediction 
           * data to the server.
@@ -244,6 +257,37 @@
           populateDayOptions($(event.target).val());
         });
 
+        /* adding listeners to chart time interval buttons */
+        $(".chart-time-interval-button").each(function () {
+            var thisTimeIntervalButton = this;
+            // add event listener for on-click to remove all other buttons borders and add one to self
+            thisTimeIntervalButton.addEventListener("click", function () {
+                // remove the selected-border from all of the time interval buttons
+                $(".chart-time-interval-button").each(function () {
+                    $(this).removeClass("selected-chart-time-interval");
+                });
+                // add the selected-border to the existing time interval class
+                $(thisTimeIntervalButton).addClass("selected-chart-time-interval");
+                // if requesting the past day, populate the chart with realtime prices from the past 24 hours
+                if ($(this).html() == "Past 24 Hours") {
+                    // populate the price history graph with the recorded prices over the past 24 hours
+                    var nowTime = parseInt((new Date).getTime() / 1000);
+                    var twentyFourHoursAgoTime = nowTime - (24 * 60 * 60);
+                    populatePriceHistoryGraphTimeInterval($(event.target).val(),
+                      twentyFourHoursAgoTime,
+                      nowTime);
+                }
+                // otherwise populate the chart based on historical prices from past month or year
+                else {
+                    var thisMonthIndex = ($(this).html() == "Past Month") ? (new Date).getMonth() : null;
+                    var thisYear = (new Date).getFullYear();
+                    populatePriceHistoryGraphMonthYear($(event.target).val(),
+                      thisMonthIndex,
+                      thisYear);
+                }
+            });
+        });
+
         var getNumberOfDaysInMonth = function(month, year) {
           return (new Date(parseInt(year), monthNames.indexOf(month)+1, 0)).getDate();
         }
@@ -256,9 +300,10 @@
             // populate the price history graph with the recorded prices over the past 24 hours
             var nowTime = parseInt((new Date).getTime()/1000);
             var twentyFourHoursAgoTime = nowTime - (24*60*60);
-            populatePriceHistoryGraph($(event.target).val(), 
+            populatePriceHistoryGraphTimeInterval($(event.target).val(),
               twentyFourHoursAgoTime,
               nowTime);
+
 
             populateEndDateOptions();
             $("#stock-price-history").show();
@@ -313,7 +358,7 @@
         xmlhttp.send();
       };
 
-      populateSymbolsDropdown();      
+      populateSymbolsDropdown();
     });
   </script>
 </html>
