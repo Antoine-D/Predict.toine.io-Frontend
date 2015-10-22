@@ -35,7 +35,8 @@
 
       <div id="stock-price-history" class="jumbotron" style="display: none;">
         <h3 style="text-align: center;"><span id="chart-header-symbol" style="color: #53B981;"></span> Stock Price Over the Past 24 Hours</h3>
-        <div id="price-history-chart" style="min-width: 310px; height: 400px; margin: 0 auto; padding-bottom: 10px;"></div>
+        <div id="price-history-chart" style="min-width: 310px; height: 400px; margin: 0 auto; padding-bottom: 10px;">
+        </div>
       </div>
 
       <div id="prediction-sentence" class="jumbotron" style="display: none; font-size: 200%; margin-left: 0px; color: #53B981;">
@@ -56,7 +57,7 @@
           <select id="p-end-month" class="form-control form-group" style="width: 30%"></select>
           <select id="p-end-day" class="form-control form-group" style="width: 30%"></select>
         <p class="form-inline">
-            <input id="p-predictor" class="form-control" placeholder="Email or identity phrase" type="text">
+          <input id="p-predictor" class="form-control" placeholder="Email or identity phrase" type="text">
         </p>
 
         <button id="p-create-button" class="btn btn-lg btn-custom main-button">Create Prediction</button>
@@ -97,8 +98,6 @@
 
   <script>
     $(document).ready(function() {
-        var monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
-
         /**
           * When the prediction creation button is clicked, send the prediction 
           * data to the server.

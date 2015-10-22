@@ -195,31 +195,43 @@
                         // show the prediction status
                         var predictionStatusHeader  = $("<h2></h2>");
                         var predictionStatusBody  = $("<h4></h4>");
-                        if(predictions[0].status == "active") {
+                        var predictionBodyString = "";
+
+                        if(typeof(predictions[0].lastCheckedTime) != "undefined" &&
+                            typeof(predictions[0].end) != "undefined") 
+                        {
+                            if(predictions[0].status == "active") 
+                            {
+                                // set the prediction status portion of the page
+                                $(predictionStatusHeader).html("Prediction is still valid.");
+                            }
+
+                            else if(false){
+
+                            }
+                            else if(false) {
+
+                            }
+
                             var checkedDate = new Date(0);
-                            checkedDate.setSeconds(predictions[0].checked);
+                            checkedDate.setSeconds(predictions[0].lastCheckedTime);
                             var endDate = new Date(0);
-                            endDate.setSeconds(predictions[0].checked);
-                            // set the prediction status portion of the page
-                            predictionStatusHeader.html("Prediction is still valid.");
-                            var predictionBodyString = "Last checked on " + 
+                            endDate.setSeconds(predictions[0].end);
+
+                            predictionBodyString = "Last checked on " + 
                                 checkedDate.toDateString() + " at " +
                                 ((checkedDate.getHours() + 1)%24).toString() + ":" + 
-                                checkedDate.getMinutes().toString() +
-                                " when the price was $" + /* todo get price then */ 
-                                ". Prediction ends on " + 
+                                checkedDate.getMinutes().toString() + ". Prediction ends on " + 
                                 endDate.toString();
-                            predictionStatusBody.html(predictionBodyString);
                         }
 
-                        else if(false){
-
-                        }
-                        else if(false) {
-
+                        else 
+                        {
+                            predictionBodyString = "Prediction has not been checked yet.";
                         }
 
                         $("#prediction-result").html("");
+                        $(predictionStatusBody).html(predictionBodyString);
                         $("#prediction-result").append($(predictionStatusHeader));
                         $("#prediction-result").append($(predictionStatusBody));
 

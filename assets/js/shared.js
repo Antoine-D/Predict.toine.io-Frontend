@@ -1,3 +1,5 @@
+var monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+
 /**
   * Return the price history between [startDateTime, endDateTime]
   */
@@ -34,8 +36,11 @@ var populatePriceHistoryGraph = function (symbol, startDateTime, endDateTime) {
             priceDate.setSeconds(stockPriceHistory[i].time);
             var priceHour = (priceDate.getHours() + 1)%24;
             var priceMinute = priceDate.getMinutes();
+            var priceMonth = priceDate.getMonth() + 1;
+            var priceDay = priceDate.getDate();
             var timeSeperator = (priceMinute >= 10) ? ":" : ":0"; // pad with 0 if minute less than 10
-            times.push(priceHour.toString() + timeSeperator + priceMinute.toString());
+            times.push(priceMonth.toString() + "/" + priceDay.toString() + 
+              " " + priceHour.toString() + timeSeperator + priceMinute.toString());
         }
         // draw the graph using the times (x-axis) and prices (y-axis)
         drawPriceGraph(symbol, times, prices);
