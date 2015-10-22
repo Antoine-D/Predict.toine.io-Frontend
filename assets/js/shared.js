@@ -16,6 +16,8 @@ var populatePriceHistoryGraphTimeInterval = function (symbol, startDateTime, end
   // clear the graph
   $('#price-history-chart').highcharts({});
   
+  startLoading(); // triger loading status on UI (shows loading text and disabled time interval buttons)
+
   // create the endpoint GET url with params
   var stockPricesEndpoint = "http://104.131.219.239:3060/values?type=stock";
   stockPricesEndpoint += "&object=";
@@ -53,10 +55,46 @@ var populatePriceHistoryGraphTimeInterval = function (symbol, startDateTime, end
         }
         // draw the graph using the times (x-axis) and prices (y-axis)
         drawPriceGraph(symbol, times, prices);
+        endLoading(); // after drawing the price graph -> end the loading
     }
   }
 
   xmlhttp.send();
+};
+
+/**
+  * Show loading text and disable the time interval switch options
+  */
+var startLoading = function () {
+    /* Show the loading text */
+    if ($("#chart-loading-text").length > 0) {
+        $("#chart-loading-text")[0].css("display", "block");
+    }
+    else {
+        var loadingText = $("<h2></h2>");
+        $(loadingText).attr("id", "chart-loading-text");
+        $(loadingText).css("color", "#53B981");
+        $(loadingText).html("Loading...");
+        $("#price-history-chart").html(loadingText);
+    }
+
+    /* Disable all time interval buttons */
+    $(".chart-time-interval-button").each(function () {
+        $(this).prop("disabled", true);
+    });
+};
+
+/**
+  * End the loading sequence (hide loading text and re-enable the time interval buttons
+  */
+var endLoading = function () {
+    /* Hide the loading text */
+    $("#chart-loading-text")[0].css("display", "block");
+
+    /* Re-enable all the time interval buttons */
+    $(".chart-time-interval-button").each(function () {
+        $(this).prop("disabled", false);
+    });
 };
 
 var drawPriceGraph = function (symbol, times, prices) {
