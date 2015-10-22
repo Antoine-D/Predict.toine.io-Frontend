@@ -1,9 +1,18 @@
 var monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 
+/** 
+  * populate the price history chart with an entire month or year 
+  * (if monthIndex == null then assumes you want entire year)
+  */
+var populatePriceHistoryGraphMonthYear = function (monthIndex, year) {
+    // clear the graph
+    $('#price-history-chart').highcharts({});
+}
+
 /**
   * Return the price history between [startDateTime, endDateTime]
   */
-var populatePriceHistoryGraph = function (symbol, startDateTime, endDateTime) {
+var populatePriceHistoryGraphTimeInterval = function (symbol, startDateTime, endDateTime) {
   // clear the graph
   $('#price-history-chart').highcharts({});
   
