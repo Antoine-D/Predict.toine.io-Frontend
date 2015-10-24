@@ -35,7 +35,6 @@ var populatePriceHistoryGraphTimeInterval = function (symbol, startDateTime, end
     if(xmlhttp.readyState==4 && xmlhttp.status==200) {
         var rawstockPriceHistory = xmlhttp.responseText;
         var stockPriceHistory = JSON.parse(rawstockPriceHistory);
-        //console.log(stockPriceHistory);
         // create seperate lists for prices and dates
         var prices = Array();
         var times = Array(); // epoch times
@@ -89,7 +88,9 @@ var startLoading = function () {
   */
 var endLoading = function () {
     /* Hide the loading text */
-    $("#chart-loading-text")[0].css("display", "block");
+    while($("#chart-loading-text").length == 1) {
+      $("#chart-loading-text")[0].css("display", "none");
+    }
 
     /* Re-enable all the time interval buttons */
     $(".chart-time-interval-button").each(function () {
