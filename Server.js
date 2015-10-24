@@ -185,7 +185,9 @@ valuesRouter.use(function (req, res, next) {
     var findQueryObject = {};
     var url = require('url');
     var url_parts = url.parse(req.originalUrl, true);
+    // assume paramaters not valid and is NOT a historical values query
     var paramatersValid = false;
+    var isHistoricalValuesQuery = false
     
     // grab the "type" and "object" paramater from the GET request
     if (url_parts.query.hasOwnProperty("type") &&
@@ -211,27 +213,34 @@ valuesRouter.use(function (req, res, next) {
             var endTime = parseInt(url_parts.query.end);
             findQueryObject.time.$lte = endTime;
         }
-        // get end time (upper bound) if it's a paramater
-        if (url_parts.query.hasOwnProperty("end")) {
-            if(!findQueryObject.hasOwnProperty("time")) {
-                findQueryObject.time = {};
-            }
-            var endTime = parseInt(url_parts.query.end);
-            findQueryObject.time.$lte = endTime;
+    }
+
+    // check if it's a historical values query
+    if (url_parts.query.hasOwnProperty("queryType")) {
+        if(url_parts.query.queryType.toLowerCase() = "historical") {
+            isHistoricalValuesQuery = true;
         }
     }
+
 
     if (paramatersValid) {
         if (!mongoError) {
-            var valuesCollection = db.collection('values');
-            valuesCollection.find(findQueryObject).toArray(function (err, result) {
-                res.setHeader('Content-Type', 'application/json');
-                res.send(JSON.stringify(result));
-            });
+            // if attempting to get historical values (high/low/etc. for the day)
+            if(isHistoricalValuesQuery) {
+
+            }
+            // looking for set of realtime values (taken every 5 mins)
+            else {
+                var valuesCollection = db.collection('values');
+                valuesCollection.find(findQueryObject).toArray(function (err, result) {
+                    res.setHeader('Content-Type', 'application/json');
+                    res.send(JSON.stringify(result));
+                });
+            }
+            
         }
     }
 });
-
 
 /**
   * Insert a prediction into the predictions collection

@@ -33,7 +33,7 @@
         </div>
       </div>
 
-      <div id="stock-price-history" class="jumbotron" >
+      <div id="stock-price-history" class="jumbotron" style="display: none;">
           <h3 style="text-align: center;"><span id="chart-header-symbol" style="color: #53B981;"></span> Stock Price History</h3>
         <div class="row">
            <div class="col-md-4">
@@ -273,7 +273,7 @@
                     // populate the price history graph with the recorded prices over the past 24 hours
                     var nowTime = parseInt((new Date).getTime() / 1000);
                     var twentyFourHoursAgoTime = nowTime - (24 * 60 * 60);
-                    populatePriceHistoryGraphTimeInterval($(event.target).val(),
+                    populatePriceHistoryGraphTimeInterval($("#selected-symbol").val(),
                       twentyFourHoursAgoTime,
                       nowTime);
                 }

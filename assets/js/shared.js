@@ -4,9 +4,22 @@ var monthNames = ["January", "February", "March", "April", "May", "June", "July"
   * populate the price history chart with an entire month or year 
   * (if monthIndex == null then assumes you want entire year)
   */
-var populatePriceHistoryGraphMonthYear = function (monthIndex, year) {
+var populatePriceHistoryGraphMonthYear = function (symbol, monthIndex, year) {
+    startLoading();
+    setTimeout(function() {
+      endLoading();
+    }, 4000);
     // clear the graph
     $('#price-history-chart').highcharts({});
+
+    // create the endpoint GET url with params
+    var historicalEndpoint = "http://104.131.219.239:3060/values?queryType=historical&type=stock";
+    historicalEndpoint += "&object=";
+    historicalEndpoint += encodeURIComponent(String(symbol).trim());
+    historicalEndpoint += "&start=";
+    historicalEndpoint += encodeURIComponent(String(startDateTime).trim());
+    historicalEndpoint += "&end=";
+    historicalEndpoint += encodeURIComponent(String(endDateTime).trim());
 }
 
 /**
