@@ -4,22 +4,58 @@ var monthNames = ["January", "February", "March", "April", "May", "June", "July"
   * populate the price history chart with an entire month or year 
   * (if monthIndex == null then assumes you want entire year)
   */
-var populatePriceHistoryGraphMonthYear = function (symbol, monthIndex, year) {
-    startLoading();
-    setTimeout(function() {
-      endLoading();
-    }, 4000);
-    // clear the graph
-    $('#price-history-chart').highcharts({});
+var populatePriceHistoryGraphHistorical = function (symbol, startDateTime, endDateTime) {
+  // clear the graph
+  $('#price-history-chart').highcharts({});
+  // triger loading status on UI (shows loading text and disabled time interval buttons)
+  startLoading(); 
 
-    // create the endpoint GET url with params
-    var historicalEndpoint = "http://104.131.219.239:3060/values?queryType=historical&type=stock";
-    historicalEndpoint += "&object=";
-    historicalEndpoint += encodeURIComponent(String(symbol).trim());
-    historicalEndpoint += "&start=";
-    historicalEndpoint += encodeURIComponent(String(startDateTime).trim());
-    historicalEndpoint += "&end=";
-    historicalEndpoint += encodeURIComponent(String(endDateTime).trim());
+  // create the endpoint GET url with params
+  var historicalEndpoint = "http://104.131.219.239:3060/values?queryType=historical&type=stock";
+  historicalEndpoint += "&object=";
+  historicalEndpoint += encodeURIComponent(String(symbol).trim());
+  historicalEndpoint += "&start=";
+  historicalEndpoint += encodeURIComponent(String(startDateTime).trim());
+  historicalEndpoint += "&end=";
+  historicalEndpoint += encodeURIComponent(String(endDateTime).trim());
+  console.log(historicalEndpoint);
+  // create the request result handler
+  var xmlhttp = new XMLHttpRequest();
+  xmlhttp.open("GET", historicalEndpoint, true);
+  xmlhttp.onreadystatechange=function() {
+    // if the status is correct, attempt to parse the response as an object
+    if(xmlhttp.readyState==4 && xmlhttp.status==200) {
+        var rawstockPriceHistory = xmlhttp.responseText;
+        var stockPriceHistory = JSON.parse(rawstockPriceHistory);
+        // create seperate lists for prices and dates
+        
+        var dates = Array();
+        var lows = Array();
+        var highs = Array();
+        var opens = Array();
+        var closes = Array();
+        //var volumes = Array();
+        for (var i = 0; i < stockPriceHistory.length; i++) {
+          console.log(stockPriceHistory[i]);
+          var thisDay = stockPriceHistory[i].day;
+          var thisMonth = stockPriceHistory[i].month;
+          var thisYear = stockPriceHistory[i].year;
+          var thisDate = thisDay.toString() + "/" + thisMonth.toString() + "/" + thisYear.toString();
+          dates.push(thisDate);
+
+          lows.push(parseFloat(stockPriceHistory[i].low));
+          highs.push(parseFloat(stockPriceHistory[i].high));
+          opens.push(parseFloat(stockPriceHistory[i].open));
+          closes.push(parseFloat(stockPriceHistory[i].close));
+          //volumes.push(stockPriceHistory[i].volume);
+        }
+        // draw the graph using the times (x-axis) and prices (y-axis)
+        drawHistoricalGraph(symbol, dates, lows, highs, opens, closes);
+        endLoading(); // after drawing the price graph -> end the loading
+    }
+  }
+
+  xmlhttp.send();
 }
 
 /**
@@ -39,7 +75,6 @@ var populatePriceHistoryGraphTimeInterval = function (symbol, startDateTime, end
   stockPricesEndpoint += encodeURIComponent(String(startDateTime).trim());
   stockPricesEndpoint += "&end=";
   stockPricesEndpoint += encodeURIComponent(String(endDateTime).trim());
-  console.log(stockPricesEndpoint);
   // create the request result handler
   var xmlhttp = new XMLHttpRequest();
   xmlhttp.open("GET", stockPricesEndpoint, true);
@@ -164,6 +199,90 @@ var drawPriceGraph = function (symbol, times, prices) {
           name: 'Price',
           yAxis: 0,
           data: prices,
+          tooltip: {
+              valuePrefix: '$'
+          }
+      }]
+  });
+
+  // clear highcharts graph footer
+  $($('body').find("text")[$('body').find("text").length - 1]).html("");  
+};
+
+var drawHistoricalGraph = function (symbol, dates, lows, highs, opens, closes) {
+  // populate the chart
+  $('#price-history-chart').highcharts({
+      chart: {
+          zoomType: 'xy'
+      },
+      colors: ['#d9534f', '#5cb85c', '#5bc0de', '#337ab7'],
+      title: {
+          text: ''
+      },
+      subtitle: {
+          text: ''
+      },
+      exporting: {
+          enabled: false
+      },
+      xAxis: [{
+          categories: dates,
+          crosshair: true,
+          title: {
+              text: '<br/>Date',
+              style: {
+                  color: '#333A45'
+              }
+          },
+          labels: {
+              enabled: false
+          }
+      }],
+      yAxis: [{
+          min: Math.min.apply(Math, lows.concat(highs,opens, closes)),
+          gridLineWidth: 0,
+          title: {
+              text: 'Value ($)',
+              style: {
+                  color: '#333A45'
+              }
+          },
+          labels: {
+              format: '{value}',
+              style: {
+                  color: '#333A45'
+              }
+          }
+      }],
+      legend: {
+          shared: true,
+          enabled: false
+      },
+      series: [{
+          name: 'Low',
+          yAxis: 0,
+          data: lows,
+          tooltip: {
+              valuePrefix: '$'
+          }
+      }, {
+          name: 'High',
+          yAxis: 0,
+          data: highs,
+          tooltip: {
+              valuePrefix: '$'
+          }
+      }, {
+          name: 'Open',
+          yAxis: 0,
+          data: opens,
+          tooltip: {
+              valuePrefix: '$'
+          }
+      }, {
+          name: 'Close',
+          yAxis: 0,
+          data: closes,
           tooltip: {
               valuePrefix: '$'
           }

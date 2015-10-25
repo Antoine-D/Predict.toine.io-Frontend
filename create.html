@@ -278,12 +278,21 @@
                       nowTime);
                 }
                 // otherwise populate the chart based on historical prices from past month or year
-                else {
-                    var thisMonthIndex = ($(this).html() == "Past Month") ? (new Date).getMonth() : null;
-                    var thisYear = (new Date).getFullYear();
-                    populatePriceHistoryGraphMonthYear($(event.target).val(),
-                      thisMonthIndex,
-                      thisYear);
+                else if ($(this).html() == "Past Month") {
+                    var nowTime = parseInt((new Date).getTime() / 1000);
+                    var thirtyDaysAgoTime = nowTime - (30 * 24 * 60 * 60);
+                    populatePriceHistoryGraphHistorical($("#selected-symbol").val(),
+                      thirtyDaysAgoTime,
+                      nowTime);
+                }
+
+                // otherwise populate the chart based on historical prices from past month or year
+                else if ($(this).html() == "Past Year") {
+                    var nowTime = parseInt((new Date).getTime() / 1000);
+                    var oneYearAgoTime = nowTime - (365 * 24 * 60 * 60);
+                    populatePriceHistoryGraphHistorical($("#selected-symbol").val(),
+                      oneYearAgoTime,
+                      nowTime);
                 }
             });
         });
