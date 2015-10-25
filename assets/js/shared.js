@@ -1,6 +1,43 @@
 var monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 
 /**
+  * Gets the most recent price of a stock and calls with the optional callback
+  */
+var getMostRecentPrice = function(symbol, callback) {
+  var nowTime = parseInt((new Date).getTime() / 1000);
+  var oneHourAgoTime = nowTime - (60 * 60);
+  // create the endpoint GET url with params
+  var stockPricesEndpoint = "http://104.131.219.239:3060/values?type=stock";
+  stockPricesEndpoint += "&object=";
+  stockPricesEndpoint += encodeURIComponent(String(symbol).trim());
+  stockPricesEndpoint += "&start=";
+  stockPricesEndpoint += encodeURIComponent(String(oneHourAgoTime).trim());
+  stockPricesEndpoint += "&end=";
+  stockPricesEndpoint += encodeURIComponent(String(nowTime).trim());
+  // create the request result handler
+  var xmlhttp = new XMLHttpRequest();
+  xmlhttp.open("GET", stockPricesEndpoint, true);
+  xmlhttp.onreadystatechange=function() {
+    // if the status is correct, attempt to parse the response as an object
+    if(xmlhttp.readyState==4 && xmlhttp.status==200) {
+        var rawstockPriceHistory = xmlhttp.responseText;
+        var stockPriceHistory = JSON.parse(rawstockPriceHistory);
+        stockPriceHistory.sort(compareValueObjects); // make most recent value first
+        // if the value exists and the html input element exists to place it in
+        if(stockPriceHistory.length > 0 && 
+          stockPriceHistory[0].hasOwnProperty("value") && 
+          stockPriceHistory[0].value != null) {
+          if(typeof(callback) == "function") {
+            callback(stockPriceHistory[0].value);
+          }
+        }
+    }
+  }
+
+  xmlhttp.send();
+};
+
+/**
   * Compare two value objects
   */
 var compareValueObjects = function(a,b) {
@@ -192,7 +229,7 @@ var drawPriceGraph = function (symbol, times, prices) {
           min: Math.min.apply(Math, prices),
           gridLineWidth: 0,
           title: {
-              text: 'Price ($)',
+              text: 'USD ($)',
               style: {
                   color: '#333A45'
               }
@@ -206,7 +243,7 @@ var drawPriceGraph = function (symbol, times, prices) {
       }],
       legend: {
           shared: true,
-          enabled: false
+          enabled: true
       },
       series: [{
           name: 'Price',
@@ -255,7 +292,7 @@ var drawHistoricalGraph = function (symbol, dates, lows, highs, opens, closes) {
           min: Math.min.apply(Math, lows.concat(highs,opens, closes)),
           gridLineWidth: 0,
           title: {
-              text: 'Value ($)',
+              text: 'USD ($)',
               style: {
                   color: '#333A45'
               }
@@ -269,7 +306,7 @@ var drawHistoricalGraph = function (symbol, dates, lows, highs, opens, closes) {
       }],
       legend: {
           shared: true,
-          enabled: false
+          enabled: true
       },
       series: [{
           name: 'Low',

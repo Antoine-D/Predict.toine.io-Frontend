@@ -33,6 +33,14 @@
         </div>
       </div>
 
+      <div id="current-price-jumbotron" class="jumbotron" style="display: none;">
+        <div>
+          <h4>USD ($)</h4>
+          <h3 id="current-price" class="current-price-massive" style="color: #53B981; margin-bottom: 0px;">
+          </h3>
+        </div>
+      </div>
+
       <div id="stock-price-history" class="jumbotron" style="display: none;">
           <h3 style="text-align: center;"><span id="chart-header-symbol" style="color: #53B981;"></span> Stock Price History</h3>
         <div class="row">
@@ -52,10 +60,10 @@
         </div>
       </div>
 
-      <div id="prediction-sentence" class="jumbotron" style="display: none; font-size: 200%; margin-left: 0px; color: #53B981;">
+      <div id="prediction-sentence" class="jumbotron" style="display: none; font-size: 90%; margin-left: 0px; color: #53B981;">
         <p class="form-inline">
-          <span style="font-size: 130%;">I predict</span> <span id="p-object" style="background-color: black; color: #FFCC00; padding: 4px; border-radius: 4px;"></span> <span style="font-size: 130%;">will</span> 
-          <select id="p-action" class="form-control" style="width: 30%">
+          <span>I predict</span> <span id="p-object" style="background-color: black; color: #FFCC00; padding: 4px; border-radius: 4px;"></span> <span>will</span> 
+          <select id="p-action" class="form-control" style="width: 30%; margin: 10px auto;">
             <option>reach above</option>
             <option>sink below</option>
             <option>stay above</option>
@@ -63,7 +71,7 @@
           </select>
         </p>
         <p class="form-inline">
-          $<input id="p-value" type="number" value="100.00" step="0.01" style="width: 100px;" min="0" max="100.00"> <span style="font-size: 130%;">by</span> <input id="p-end-time" type="time" value="13:33"> <span style="font-size: 130%;">on</span>
+          $<input id="p-value" type="number" value="100.00" step="0.01" style="width: 100px;" min="0" max="100.00"> <span>by</span> <input id="p-end-time" type="time" value="23:59"> <span>on</span>
         </p>
         <p class="form-inline">
           <select id="p-end-year" class="form-control form-group" style="width: 30%"></select>
@@ -96,11 +104,16 @@
           </span>
           <div id="prediction-create-errors" style="display: none;"></div>
         </p>
-        <p class="col-lg-6" id="copyright-notice">&copy; <a class="a-custom" href="http://www.antoinedahan.com">Antoine Dahan</a></p>
+        <p class="col-lg-6" id="copyright-notice">&copy; <a class="a-custom" href="http://www.antoinedahan.com">Antoine Dahan </a>
+        <script>
+          document.getElementById("copyright-notice").innerHTML += (new Date()).getFullYear().toString();
+        </script>
+      </p>
       </footer>
     </div> <!-- /container -->
 
-
+    <!-- hidden inputs -->
+    <input id="most-recent-price" type="hidden">
   </body>
   
   <script src="assets/js/jquery-1.11.3.min.js"></script>
@@ -111,6 +124,32 @@
 
   <script>
       $(document).ready(function () {
+        var setPredictionValue = function(action) {
+          var predictionValue = parseFloat($("#most-recent-price").val());
+          var newPredictionValue;
+          if(action == "reach above") {
+            newPredictionValue = parseFloat((predictionValue*1.1).toFixed(2));
+          }
+          else if(action == "sink below") {
+            newPredictionValue = parseFloat((predictionValue*0.9).toFixed(2));
+          }
+          else if(action == "stay above") {
+            newPredictionValue = parseFloat((predictionValue*0.9).toFixed(2));
+          }
+          else if(action == "stay below") {
+            newPredictionValue = parseFloat((predictionValue*1.1).toFixed(2));
+          }
+
+          $("#p-value").val(newPredictionValue);
+        };
+
+        /**
+          * On change of the action dropdown
+          */
+        $("#p-action").on("change", function() {
+          setPredictionValue($("#p-action").val());
+        });
+
         /**
           * When the prediction creation button is clicked, send the prediction 
           * data to the server.
@@ -302,7 +341,7 @@
         }
 
         $("#selected-symbol").on("change", function () {
-            var selectedSymbol = $("#selected-symbol").val();
+            var selectedSymbol = $("#selected-symbol").val().toString();
             $("#p-object").html(selectedSymbol);
             $("#chart-header-symbol").html(selectedSymbol);
             
@@ -320,16 +359,20 @@
               }
             });
 
-
+            // grab the most recent value and store in the input with id: "most-recent-price"
+            getMostRecentPrice(selectedSymbol, function(mostRecentPrice) {
+              $("#most-recent-price").val(mostRecentPrice);
+              setPredictionValue($("#p-action").val());
+              $("#current-price").html(mostRecentPrice.toString());
+            });
 
             populateEndDateOptions();
             $("#stock-price-history").show();
             $("#prediction-sentence").show();
+            $("#current-price-jumbotron").show();
         
             // show the footer and set copyright year in footer
             $($("footer")[0]).show();
-            $("#copyright-notice").html(
-                $("#copyright-notice").html() + " " + (new Date()).getFullYear());
       });
 
       var restore_price_style_timeout;
