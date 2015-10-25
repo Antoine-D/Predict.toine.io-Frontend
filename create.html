@@ -313,6 +313,14 @@
               twentyFourHoursAgoTime,
               nowTime);
 
+            $(".chart-time-interval-button").each(function () {
+              $(this).removeClass("selected-chart-time-interval");
+              if($(this).html() == "Past 24 Hours") {
+                $(this).addClass("selected-chart-time-interval");
+              }
+            });
+
+
 
             populateEndDateOptions();
             $("#stock-price-history").show();
