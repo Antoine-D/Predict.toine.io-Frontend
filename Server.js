@@ -210,39 +210,27 @@ valuesRouter.use(function (req, res, next) {
 
         if(isHistoricalValuesQuery) {
             collectionToSearch = db.collection('historicalValues');
-
-            // get the month if it's a paramater
-            if (url_parts.query.hasOwnProperty("month")) {
-                var month = parseInt(url_parts.query.month);
-                findQueryObject.month = month;
-            }
-            // get the year if it's a paramater
-            if (url_parts.query.hasOwnProperty("year")) {
-                var year = parseInt(url_parts.query.year);
-                findQueryObject.year = year;
-            }
         }
-
         else {
             collectionToSearch = db.collection('values');
+        }
 
-            // get start time (lower bound) if it's a paramater
-            if (url_parts.query.hasOwnProperty("start")) {
-                if(!findQueryObject.hasOwnProperty("time")) {
-                    findQueryObject.time = {};
-                }
-                var startTime = parseInt(url_parts.query.start);
-                findQueryObject.time.$gte = startTime;
+        // get start time (lower bound) if it's a paramater
+        if (url_parts.query.hasOwnProperty("start")) {
+            if(!findQueryObject.hasOwnProperty("time")) {
+                findQueryObject.time = {};
             }
+            var startTime = parseInt(url_parts.query.start);
+            findQueryObject.time.$gte = startTime;
+        }
 
-            // get end time (upper bound) if it's a paramater
-            if (url_parts.query.hasOwnProperty("end")) {
-                if(!findQueryObject.hasOwnProperty("time")) {
-                    findQueryObject.time = {};
-                }
-                var endTime = parseInt(url_parts.query.end);
-                findQueryObject.time.$lte = endTime;
+        // get end time (upper bound) if it's a paramater
+        if (url_parts.query.hasOwnProperty("end")) {
+            if(!findQueryObject.hasOwnProperty("time")) {
+                findQueryObject.time = {};
             }
+            var endTime = parseInt(url_parts.query.end);
+            findQueryObject.time.$lte = endTime;
         }
 
         collectionToSearch.find(findQueryObject).toArray(function (err, result) {
