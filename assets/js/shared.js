@@ -1,5 +1,16 @@
 var monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 
+/**
+  * Compare two value objects
+  */
+var compareValueObjects = function(a,b) {
+  if (a.time < b.time)
+    return -1;
+  if (a.time > b.time)
+    return 1;
+  return 0;
+}
+
 /** 
   * populate the price history chart with an entire month or year 
   * (if monthIndex == null then assumes you want entire year)
@@ -26,8 +37,9 @@ var populatePriceHistoryGraphHistorical = function (symbol, startDateTime, endDa
     // if the status is correct, attempt to parse the response as an object
     if(xmlhttp.readyState==4 && xmlhttp.status==200) {
         var rawstockPriceHistory = xmlhttp.responseText;
-        var stockPriceHistory = JSON.parse(rawstockPriceHistory);
-        // create seperate lists for prices and dates
+        var historicalValues = JSON.parse(rawstockPriceHistory);
+        // sort the resulting value objects
+        historicalValues.sort(compareValueObjects);
         
         var dates = Array();
         var lows = Array();
@@ -35,18 +47,18 @@ var populatePriceHistoryGraphHistorical = function (symbol, startDateTime, endDa
         var opens = Array();
         var closes = Array();
         //var volumes = Array();
-        for (var i = 0; i < stockPriceHistory.length; i++) {
-          console.log(stockPriceHistory[i]);
-          var thisDay = stockPriceHistory[i].day;
-          var thisMonth = stockPriceHistory[i].month;
-          var thisYear = stockPriceHistory[i].year;
-          var thisDate = thisDay.toString() + "/" + thisMonth.toString() + "/" + thisYear.toString();
+        for (var i = 0; i < historicalValues.length; i++) {
+          console.log(historicalValues[i]);
+          var thisDay = historicalValues[i].day;
+          var thisMonth = historicalValues[i].month;
+          var thisYear = historicalValues[i].year;
+          var thisDate = thisMonth.toString() + "/" + thisDay.toString() + "/" + thisYear.toString();
           dates.push(thisDate);
 
-          lows.push(parseFloat(stockPriceHistory[i].low));
-          highs.push(parseFloat(stockPriceHistory[i].high));
-          opens.push(parseFloat(stockPriceHistory[i].open));
-          closes.push(parseFloat(stockPriceHistory[i].close));
+          lows.push(parseFloat(historicalValues[i].low));
+          highs.push(parseFloat(historicalValues[i].high));
+          opens.push(parseFloat(historicalValues[i].open));
+          closes.push(parseFloat(historicalValues[i].close));
           //volumes.push(stockPriceHistory[i].volume);
         }
         // draw the graph using the times (x-axis) and prices (y-axis)
@@ -83,6 +95,7 @@ var populatePriceHistoryGraphTimeInterval = function (symbol, startDateTime, end
     if(xmlhttp.readyState==4 && xmlhttp.status==200) {
         var rawstockPriceHistory = xmlhttp.responseText;
         var stockPriceHistory = JSON.parse(rawstockPriceHistory);
+        stockPriceHistory.sort(compareValueObjects);
         // create seperate lists for prices and dates
         var prices = Array();
         var times = Array(); // epoch times
