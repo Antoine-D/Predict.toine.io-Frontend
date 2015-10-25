@@ -187,58 +187,68 @@ valuesRouter.use(function (req, res, next) {
     var url_parts = url.parse(req.originalUrl, true);
     // assume paramaters not valid and is NOT a historical values query
     var paramatersValid = false;
-    var isHistoricalValuesQuery = false
-    
+    var isHistoricalValuesQuery = false;
+
     // grab the "type" and "object" paramater from the GET request
     if (url_parts.query.hasOwnProperty("type") &&
         url_parts.query.hasOwnProperty("object")) {
         findQueryObject.type = url_parts.query.type;
         findQueryObject.object = url_parts.query.object;
         paramatersValid = true;
-        // create time search object to match times within range
-        
-        // get start time (lower bound) if it's a paramater
-        if (url_parts.query.hasOwnProperty("start")) {
-            if(!findQueryObject.hasOwnProperty("time")) {
-                findQueryObject.time = {};
-            }
-            var startTime = parseInt(url_parts.query.start);
-            findQueryObject.time.$gte = startTime;
-        }
-        // get end time (upper bound) if it's a paramater
-        if (url_parts.query.hasOwnProperty("end")) {
-            if(!findQueryObject.hasOwnProperty("time")) {
-                findQueryObject.time = {};
-            }
-            var endTime = parseInt(url_parts.query.end);
-            findQueryObject.time.$lte = endTime;
-        }
     }
 
     // check if it's a historical values query
     if (url_parts.query.hasOwnProperty("queryType")) {
-        if(url_parts.query.queryType.toLowerCase() = "historical") {
+        if(url_parts.query.queryType.toLowerCase() == "historical") {
             isHistoricalValuesQuery = true;
         }
     }
 
+    // if the paramaters are valid, grab the values
+    if(paramatersValid) {
+        var collectionToSearch;
 
-    if (paramatersValid) {
-        if (!mongoError) {
-            // if attempting to get historical values (high/low/etc. for the day)
-            if(isHistoricalValuesQuery) {
+        if(isHistoricalValuesQuery) {
+            collectionToSearch = db.collection('historicalValues');
 
+            // get the month if it's a paramater
+            if (url_parts.query.hasOwnProperty("month")) {
+                var month = parseInt(url_parts.query.month);
+                findQueryObject.month = month;
             }
-            // looking for set of realtime values (taken every 5 mins)
-            else {
-                var valuesCollection = db.collection('values');
-                valuesCollection.find(findQueryObject).toArray(function (err, result) {
-                    res.setHeader('Content-Type', 'application/json');
-                    res.send(JSON.stringify(result));
-                });
+            // get the year if it's a paramater
+            if (url_parts.query.hasOwnProperty("year")) {
+                var year = parseInt(url_parts.query.year);
+                findQueryObject.year = year;
             }
-            
         }
+
+        else {
+            collectionToSearch = db.collection('values');
+
+            // get start time (lower bound) if it's a paramater
+            if (url_parts.query.hasOwnProperty("start")) {
+                if(!findQueryObject.hasOwnProperty("time")) {
+                    findQueryObject.time = {};
+                }
+                var startTime = parseInt(url_parts.query.start);
+                findQueryObject.time.$gte = startTime;
+            }
+
+            // get end time (upper bound) if it's a paramater
+            if (url_parts.query.hasOwnProperty("end")) {
+                if(!findQueryObject.hasOwnProperty("time")) {
+                    findQueryObject.time = {};
+                }
+                var endTime = parseInt(url_parts.query.end);
+                findQueryObject.time.$lte = endTime;
+            }
+        }
+
+        collectionToSearch.find(findQueryObject).toArray(function (err, result) {
+            res.setHeader('Content-Type', 'application/json');
+            res.send(JSON.stringify(result));
+        });
     }
 });
 
