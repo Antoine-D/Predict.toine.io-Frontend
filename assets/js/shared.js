@@ -202,7 +202,7 @@ var drawPriceGraph = function (symbol, times, prices) {
       chart: {
           zoomType: 'xy'
       },
-      colors: ['#53B981'],
+      colors: ['#FF6600'],
       title: {
           text: ''
       },
