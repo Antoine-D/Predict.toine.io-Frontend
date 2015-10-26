@@ -148,9 +148,18 @@ predictionsRouter.use(function (req, res, next) {
         }
     }
 
-    // grab the "predictor" paramater from the GET request
-    if (url_parts.query.hasOwnProperty("predictor")) {
-        findQueryObject.predictor = url_parts.query.predictor;
+    // grab the "encryptedPredictor" paramater from the GET request
+    if (url_parts.query.hasOwnProperty("encryptedPredictor")) {
+        findQueryObject.predictor = url_parts.query.encryptedPredictor;
+        paramatersValid = true;
+    }
+
+    // grab the "unencryptedPredictor" paramater from the GET request
+    if (url_parts.query.hasOwnProperty("unEncryptedPredictor")) {
+        var unEncryptedPredictor = url_parts.query.unEncryptedPredictor
+        var encryptedPredictor = new Buffer(encrypt(unEncryptedPredictor)).toString('utf8'); 
+
+        findQueryObject.predictor = encryptedPredictor;
         paramatersValid = true;
     }
 
