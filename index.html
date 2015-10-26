@@ -30,13 +30,14 @@
       <div class="jumbotron" id="predictions-search-section" style="display: none;">
         <div>
           <p style="text-align: left;"></p>
-          <input type='text' class='form-control' id='timetable-name' name='name' placeholder="Notify email or identity phrase."> <br/>
+          <input type='text' class='form-control' id='predictor-input' placeholder="Notify email or identity phrase."> <br/>
           <a id="predictions-search-button" href="#predictions-results-section" class="btn btn-md btn-custom">Search</a>
         </div>
       </div>
 
       <div class="jumbotron" id="predictions-results-section" style="display: none;">
         <div>
+          <!--
           <h4 style="text-align: center;">Your Predictions</h4>
           <div class="prediction-search-result">
             <a class="a-custom" href="app">I predict that AAPL will stay bellow $12.00 by 5:00pm on May 23 2015.</a>
@@ -47,6 +48,7 @@
           <div class="prediction-search-result">
             <a class="a-custom" href="app">I predict that AAPL will stay bellow $12.00 by 5:00pm on May 23 2015.</a>
           </div>
+        -->
         </div>
       </div>
       <footer>
@@ -59,6 +61,69 @@
   <script src="assets/js/jquery-1.11.3.min.js"></script>
   <script>
     $(document).ready(function() {
+      var monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+
+      // when the predictor is being searched for, then send GET request to the server 
+      $("#predictions-search-button").on("click", function() {
+        var predictorSearchInput = $("#predictor-input").val();
+        var predictionsEndpoint = "http://104.131.219.239:3060/predictions?";
+        predictionsEndpoint += "unEncryptedPredictor=";
+        predictionsEndpoint += encodeURIComponent(String(predictorSearchInput).trim());
+        // create the request result handler
+        var xmlhttp = new XMLHttpRequest();
+        xmlhttp.open("GET", predictionsEndpoint, true);
+        xmlhttp.onreadystatechange=function() {
+          // if the status is correct, attempt to parse the response as an object
+          if(xmlhttp.readyState==4 && xmlhttp.status==200) {
+            var rawPredictions = xmlhttp.responseText;
+            var predictions = JSON.parse(rawPredictions);
+            $("#predictions-results-section").html("");
+            if(predictions.length > 0) {
+              var predictorsPredictionsHeader = 
+                $("<h4 style='text-align: center;''>Your Predictions</h4>");
+              $("#predictions-results-section").append(predictorsPredictionsHeader);
+
+              // for each of the predictor's predictions, append the sentence in 
+              // the predictions-results-section.
+              for(var i = 0; i < predictions.length; i++) {
+                var predictionEndDate = new Date(0);
+                predictionEndDate.setSeconds(parseInt(predictions[i].end));
+                var fullPredictionTimeString = predictionEndDate.toLocaleTimeString(); 
+                // create the prediction sentence string
+                var predictionSentenceElement = $("<div class='prediction-search-result'></div>");
+                var predictionSentenceString = "I predict that ";
+                predictionSentenceString += predictions[i].object;
+                predictionSentenceString += " will ";
+                predictionSentenceString += predictions[i].action;
+                predictionSentenceString += " ";
+                predictionSentenceString += predictions[i].value;
+                predictionSentenceString += " by ";
+                predictionSentenceString += fullPredictionTimeString.toLowerCase();
+                predictionSentenceString += " EST on ";
+                predictionSentenceString += monthNames[predictionEndDate.getMonth()];
+                predictionSentenceString += " ";
+                predictionSentenceString += predictionEndDate.getDate().toString();
+                predictionSentenceString += ", ";
+                predictionSentenceString += predictionEndDate.getFullYear().toString();
+                // create the prediction link
+                var predictionLink = $("<a class='a-custom'></a>");
+                $(predictionLink).html(predictionSentenceString);
+                $(predictionLink).attr("href", 
+                  "http://104.131.219.239:3060/predictions?id=" + predictions[i]._id);
+                // append the prediction link to the prediction element
+                $(predictionSentenceElement).append(predictionLink);
+                // append the prediction element to the prediction results section
+                $("#predictions-results-section").append(predictionSentenceElement);
+              }
+            }
+          }
+        }
+
+        xmlhttp.send();
+
+        console.log("here");
+      });
+
       // set copyright year in footer
       $("#copyright-notice").html(
         $("#copyright-notice").html() + " " + (new Date()).getFullYear());
