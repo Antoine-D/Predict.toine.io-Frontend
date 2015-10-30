@@ -313,7 +313,7 @@ app.post('/createprediction', function(req, res) {
         predictionCreateObject.predictor = req.body.predictor;
         predictionCreateObject.type = req.body.type;
         predictionCreateObject.object = req.body.object;
-        predictionCreateObject.value = req.body.value;
+        predictionCreateObject.value = parseFloat(req.body.value);
         predictionCreateObject.action = req.body.action;
         predictionCreateObject.end = parseInt(req.body.end);
         // insert the prediction
