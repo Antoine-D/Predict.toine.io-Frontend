@@ -1,6 +1,31 @@
 var monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 
 /**
+  * Creates a human readable time from the date dateToGetTimeOf
+  */
+var getHumanReadableTime = function(dateToGetTimeOf) {
+    var hours = dateToGetTimeOf.getHours();
+    var minutes = dateToGetTimeOf.getMinutes();
+    var minutesString = (minutes < 10) ? "0" : "";
+    minutesString += minutes.toString();
+    var hoursString = ((hours % 12) > 0) ? (hours % 12).toString() : "12";
+    var timePostfix = (hours < 12) ? "am" : "pm";
+    return hoursString + ":" + minutesString + timePostfix;
+}
+
+/**
+  * Utility function for getting the EST (time used by server)
+  * Returns a date object
+  */
+var getCurrentDateTimeEst = function() {
+  var offset = -5.0 // EST
+  var clientDate = new Date();
+  var utc = clientDate.getTime() + (clientDate.getTimezoneOffset() * 60000);
+  var estDate = new Date(utc + (3600000*offset));
+  return estDate;
+}
+
+/**
   * Gets the most recent price of a stock and calls with the optional callback
   */
 var getMostRecentPrice = function(symbol, callback) {

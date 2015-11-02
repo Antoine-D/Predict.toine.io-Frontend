@@ -19,13 +19,13 @@
 <body>
 
     <style>
-        .prediction-result {
-            color: #286090;
+        #prediction-result h4 {
+            text-align: left;
         }
 
-            .prediction-result h4 {
-                text-align: left;
-            }
+        .prediction-active {
+            color: #286090;
+        }
 
         .prediction-true {
             color: #53B981;
@@ -37,9 +37,11 @@
     </style>
     <div class="container">
         <div class="jumbotron">
-            <div id="prediction-result" class="prediction-result">
+            <div id="prediction-result" class="prediction-active">
+                <h2>Prediction is still valid.</h2>
+                <h4>Last checked on 10/8/2015 at 9:36am when the price was $92.77. Prediction's endtime is on 10/8/2015 at 4:55pm.</h4>
             </div>
-            <div class="prediction-result">
+            <!--<div class="prediction-result">
                 <h2>Prediction is still valid.</h2>
                 <h4>Last checked on 10/8/2015 at 9:36am when the price was $92.77. Prediction's endtime is on 10/8/2015 at 4:55pm.</h4>
             </div>
@@ -50,86 +52,8 @@
             <div class="prediction-result prediction-true">
                 <h2>Prediction proved true.</h2>
                 <h4>AAPL price reached above $100.00 before the end time of the prediction. The last price check was on 10/8/2015 at 11:55am when the price was $100.87.</h4>
-            </div>
-            <!-- Failure messages (metric is 100.00):
-                    reach above: AAPL price didn't reach above $100.00 by the end time of the prediction. The last price check was on 10/8/2015 at 4:55pm when the price was $99.87.
-                    sink bellow: AAPL price didn't sink below $100.00 by the end time of the prediction. The last price check was on 10/8/2015 at 4:55pm when the price was $102.87.
-                    stay above: AAPL price failed to stay above $100.00 by the end of the prediction. The failure occured on 10/8/2015 at 12:22pm when the price was $99.87.
-                    stay below: AAPL price failed to stay below $100.00 by the end of the prediction. The failure occured on 10/8/2015 at 12:22pm when the price was $100.32.
+            </div>-->
 
-                    possible after failure messages for the "stay predictions":
-                    The stock then sunk further to $94.33 by 2:49pm but rose again to finish the day at $99.44.
-                    The stock then sunk further and ended the day at $94.33.
-                    The stock quickly rebounded and finished the day at $108.77.
-
-                 True Messages (metric is 100.00):
-                    reach above: AAPL price reached above $100.00 before the end time of the prediction. The last price check was on 10/8/2015 at 11:55am when the price was $100.87.
-                    sink bellow: AAPL price sunk below $100.00 before the end time of the prediction. The last price check was on 10/8/2015 at 9:44am when the price was $99.97.
-                    stay above: AAPL price stayed above $100.00 until the end of the prediction timeframe. The last price check was on 10/8/2015 at 4:55pm when the price was $100.87.
-                    stay below: AAPL price stayed below $100.00 until the end of the prediction timeframe. The last price check was on 10/8/2015 at 2:55pm when the price was $99.97.
-            -->
-        </div>
-
-        <div id="stock-price-history" class="jumbotron">
-            <h3 style="text-align: center;"><span id="chart-header-symbol" style="color: #53B981;"></span> Stock Price Over the Past 24 Hours</h3>
-            <div id="price-history-chart" style="min-width: 310px; height: 400px; margin: 0 auto; padding-bottom: 10px;"></div>
-        </div>
-
-        <div class="jumbotron">
-            <h2 style="font-weight: bold;">Apple Inc. <span class="symbol">AAPL</span></h2>
-            <!--<p style="color: #333A45; font-size: 100%;">
-                price at
-                <select>
-                    <option>current time</option>
-                    <option>time of prediction</option>
-                </select>
-            </p>-->
-
-            <style>
-                .price-move-blink {
-                    /* animation stuff */
-                    animation-duration: 1000ms;
-                    animation-name: blink;
-                    animation-iteration-count: infinite;
-                    animation-direction: normal;
-                    -webkit-animation: blink 1000ms infinite; /* Safari and Chrome */
-                }
-
-                @keyframes blink {
-                    from {
-                        color: auto;
-                    }
-
-                    to {
-                        color: white;
-                    }
-                }
-
-                @-webkit-keyframes blink {
-                    from {
-                        color: auto;
-                    }
-
-                    to {
-                        color: white;
-                    }
-                }
-            </style>
-            <!-- Color of price when select current time and the price has gone up -->
-            <h1 id="current-price" class="current-price-massive" style="color: #53B981; margin-bottom: 0px;"><span class="glyphicon glyphicon-triangle-top" style="font-size: 70%;" aria-hidden="true"></span>$43.05</h1>
-
-            <button id="test-price-move-button">Price Move Test</button>
-
-            <!-- Color of price when select current time and the price has gone down -->
-            <!--<h1 class="daily-steps-tally" style="color: #D80000; margin-bottom: 0px;"><span class="glyphicon glyphicon-triangle-bottom" style="font-size: 70%;" aria-hidden="true"></span>$43.05</h1>-->
-            <!-- Color of price when select time of prediction -->
-            <!--<h1 class="current-price-massive" style="color: #286090; margin-bottom: 0px;">$43.05</h1>-->
-        </div>
-
-
-        <div class="jumbotron">
-            <h3 style="text-align: center;">Stock Price <span style="font-weight: italics;">Past 24 Hours</h3>
-            <div id="chart-one" style="min-width: 310px; height: 400px; margin: 0 auto; padding-bottom: 10px;"></div>
         </div>
 
         <footer>
@@ -144,7 +68,11 @@
                 </span>
                 </span>
             </p>
-            <p id="copyright-notice">&copy; <a class="a-custom" href="http://www.antoinedahan.com">Antoine Dahan</a></p>
+            <p class="col-lg-6" id="copyright-notice">&copy; <a class="a-custom" href="http://www.antoinedahan.com">Antoine Dahan </a>
+            <script>
+              document.getElementById("copyright-notice").innerHTML += 
+                (new Date()).getFullYear().toString();
+            </script>
         </footer>
     </div> <!-- /container -->
 
@@ -157,24 +85,11 @@
 
 <script>
     $(document).ready(function () {
-        // set copyright year in footer
-        $("#copyright-notice").html(
-          $("#copyright-notice").html() + " " + (new Date()).getFullYear());
-
-        var restore_price_style_timeout;
-        $("#test-price-move-button").on("click", function () {
-            clearTimeout(restore_price_style_timeout);
-            $("#current-price").addClass("price-move-blink");
-            restore_price_style_timeout = setTimeout(function () {
-                $("#current-price").removeClass("price-move-blink");
-            }, 800);
-        }); 
 
         var setPredictionInfo = function() {
             var thisUrl = window.location.href;
             var predictionId = thisUrl.substring(thisUrl.indexOf('prediction/') + 
                 "prediction/".length);
-            // 5624696b3fec93e80f8f70ca
             var predictionsEndpoint = "http://104.131.219.239:3060/predictions?id=";
             predictionsEndpoint += predictionId.toString();
             var xmlhttp = new XMLHttpRequest();
@@ -185,62 +100,13 @@
                     var rawPredictions = xmlhttp.responseText;
                     var predictions = JSON.parse(rawPredictions);
                     if(predictions.length >= 1) {
-                        // populate the price history graph with the recorded prices over the past 24 hours
-                        var nowTime = parseInt((new Date).getTime()/1000);
-                        var twentyFourHoursAgoTime = nowTime - (24*60*60);
-                        populatePriceHistoryGraph(predictions[0].object, 
-                            twentyFourHoursAgoTime,
-                            nowTime);
-                        $("#chart-header-symbol").html(predictions[0].object);
-                        // show the prediction status
-                        var predictionStatusHeader  = $("<h2></h2>");
-                        var predictionStatusBody  = $("<h4></h4>");
-                        var predictionBodyString = "";
-
-                        if(typeof(predictions[0].lastCheckedTime) != "undefined" &&
-                            typeof(predictions[0].end) != "undefined") 
-                        {
-                            if(predictions[0].status == "active") 
-                            {
-                                // set the prediction status portion of the page
-                                $(predictionStatusHeader).html("Prediction is still valid.");
-                            }
-
-                            else if(false){
-
-                            }
-                            else if(false) {
-
-                            }
-
-                            var checkedDate = new Date(0);
-                            checkedDate.setSeconds(predictions[0].lastCheckedTime);
-                            var endDate = new Date(0);
-                            endDate.setSeconds(predictions[0].end);
-
-                            predictionBodyString = "Last checked on " + 
-                                checkedDate.toDateString() + " at " +
-                                ((checkedDate.getHours() + 1)%24).toString() + ":" + 
-                                checkedDate.getMinutes().toString() + ". Prediction ends on " + 
-                                endDate.toString();
-                        }
-
-                        else 
-                        {
-                            predictionBodyString = "Prediction has not been checked yet.";
-                        }
-
-                        $("#prediction-result").html("");
-                        $(predictionStatusBody).html(predictionBodyString);
-                        $("#prediction-result").append($(predictionStatusHeader));
-                        $("#prediction-result").append($(predictionStatusBody));
-
-
+                        var thisPrediction = predictions[0];
+                        console.log(predictions[0]);
+                        var predictionEndDate = new Date(0);
+                        predictionEndDate.setSeconds(parseInt(thisPrediction.end));
+                        var humanPredictionEndTime = getHumanReadableTime(predictionEndDate);
+                        console.log(humanPredictionEndTime);
                     }
-                    else {
-                        alert("Prediction not found.");
-                    }
-                    
                 }
             }
 
@@ -249,12 +115,5 @@
 
         setPredictionInfo();
     });
-</script>
-
-<script>
-    // Remove the highcharts.com label
-    setTimeout(function () {
-        $($('body').find("text")[$('body').find("text").length - 1]).html("");
-    }, 100);
 </script>
 </html>
