@@ -41,19 +41,6 @@
                 <h2>Prediction is still valid.</h2>
                 <h4>Last checked on 10/8/2015 at 9:36am when the price was $92.77. Prediction's endtime is on 10/8/2015 at 4:55pm.</h4>
             </div>
-            <!--<div class="prediction-result">
-                <h2>Prediction is still valid.</h2>
-                <h4>Last checked on 10/8/2015 at 9:36am when the price was $92.77. Prediction's endtime is on 10/8/2015 at 4:55pm.</h4>
-            </div>
-            <div class="prediction-result prediction-false">
-                <h2>Prediction proved false.</h2>
-                <h4>AAPL price didn't reach above $100.00 by the end time of the prediction. The last price check was on 10/8/2015 at 4:55pm when the price was $99.87.</h4>
-            </div>
-            <div class="prediction-result prediction-true">
-                <h2>Prediction proved true.</h2>
-                <h4>AAPL price reached above $100.00 before the end time of the prediction. The last price check was on 10/8/2015 at 11:55am when the price was $100.87.</h4>
-            </div>-->
-
         </div>
 
         <footer>
@@ -62,10 +49,8 @@
                 <span style="background-color: #53B981;" class="badge">
                     <a style="color: white;" href="/.">Home</a>
                 </span>
-                </span>
                 <span style="background-color: #53B981;" class="badge">
                     <a style="color: white;" href="create">Create</a>
-                </span>
                 </span>
             </p>
             <p class="col-lg-6" id="copyright-notice">&copy; <a class="a-custom" href="http://www.antoinedahan.com">Antoine Dahan </a>
@@ -99,13 +84,46 @@
                 if(xmlhttp.readyState==4 && xmlhttp.status==200) {
                     var rawPredictions = xmlhttp.responseText;
                     var predictions = JSON.parse(rawPredictions);
-                    if(predictions.length >= 1) {
+                    if (predictions.length >= 1) {
                         var thisPrediction = predictions[0];
-                        console.log(predictions[0]);
-                        var predictionEndDate = new Date(0);
-                        predictionEndDate.setSeconds(parseInt(thisPrediction.end));
-                        var humanPredictionEndTime = getHumanReadableTime(predictionEndDate);
-                        console.log(humanPredictionEndTime);
+                        var predictionBigSentence;
+                        var predictionSmallSentence;
+
+                        // Case: Predictoin is active, so craft summary sentence to display as the reason
+                        if (thisPrediction.status == "active") {
+                            var predictionEndDate = convertDateToEst(new Date(0));
+                            predictionEndDate.setSeconds(parseInt(thisPrediction.end));
+                            var humanPredictionEndTime = getHumanReadableTime(predictionEndDate);
+                            predictionBigSentence = "Prediction is still valid.";
+                        }
+
+                        // Case: Predictoin is not active, so will have a reason field, so display that on the page.
+                        else {
+                            predictionBigSentence = "Prediction was found to be " + thisPrediction.status;
+                            predictionSmallSentence = thisPrediction.reason;
+                        }
+
+                        // clear the prediction result and set the class based on the prediction's status
+                        $("#prediction-result").html("");
+                        $("#prediction-result").attr("class", ""); // clear existing classes
+                        $("#prediction-result").addClass("prediction-" + thisPrediction.status);
+
+                        // add the prediction status
+                        if (predictionBigSentence != null && predictionBigSentence.trim().length > 0) {
+                            predictionBigElement = new $("<h2></h2>");
+                            $(predictionBigElement).html(predictionBigSentence);
+                            $("#prediction-result").append(predictionBigElement);
+                        }
+                        
+
+                        // add the prediction reason
+                        if (predictionSmallSentence != null && predictionSmallSentence.trim().length > 0) {
+                            predictionSmallElement = new $("<h4></h4>");
+                            $(predictionSmallElement).html(predictionSmallSentence);
+                            $("#prediction-result").append(predictionSmallElement);
+                        }
+
+                        
                     }
                 }
             }
