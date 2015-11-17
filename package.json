@@ -6,6 +6,6 @@
     "mongodb": "latest",
     "body-parser": "latest",
     "node-schedule": "latest",
-	  "crypto": "latest"
+	"crypto": "latest"
   }
 }

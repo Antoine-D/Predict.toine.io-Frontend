@@ -267,7 +267,7 @@ var insertPrediction = function (res, predictorCypher, predictionCreateObject) {
     }, function (err, result) {
         if(typeof result != "undefined") {
             // redirect user the the new prediction
-            res.writeHead(301, { Location: "http://104.131.219.239:3060/prediction/" + result.ops[0]._id });
+            res.writeHead(301, { Location: "http://predict.toine.io/prediction/" + result.ops[0]._id });
             res.end();
         }
         else {

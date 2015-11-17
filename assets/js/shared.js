@@ -17,7 +17,7 @@ var getHumanReadableTime = function(dateToGetTimeOf) {
   * Utility function for getting the EST (time used by server)
   * Returns a date object
   */
-var getCurrentDateTimeEst = function() {
+var convertDateToEst = function() {
   var offset = -5.0 // EST
   var clientDate = new Date();
   var utc = clientDate.getTime() + (clientDate.getTimezoneOffset() * 60000);
@@ -32,7 +32,7 @@ var getMostRecentPrice = function(symbol, callback) {
   var nowTime = parseInt((new Date).getTime() / 1000);
   var oneHourAgoTime = nowTime - (60 * 60);
   // create the endpoint GET url with params
-  var stockPricesEndpoint = "http://104.131.219.239:3060/values?type=stock";
+  var stockPricesEndpoint = "http://predict.toine.io/values?type=stock";
   stockPricesEndpoint += "&object=";
   stockPricesEndpoint += encodeURIComponent(String(symbol).trim());
   stockPricesEndpoint += "&start=";
@@ -84,7 +84,7 @@ var populatePriceHistoryGraphHistorical = function (symbol, startDateTime, endDa
   startLoading(); 
 
   // create the endpoint GET url with params
-  var historicalEndpoint = "http://104.131.219.239:3060/values?queryType=historical&type=stock";
+  var historicalEndpoint = "http://predict.toine.io/values?queryType=historical&type=stock";
   historicalEndpoint += "&object=";
   historicalEndpoint += encodeURIComponent(String(symbol).trim());
   historicalEndpoint += "&start=";
@@ -142,7 +142,7 @@ var populatePriceHistoryGraphTimeInterval = function (symbol, startDateTime, end
   startLoading(); // triger loading status on UI (shows loading text and disabled time interval buttons)
 
   // create the endpoint GET url with params
-  var stockPricesEndpoint = "http://104.131.219.239:3060/values?type=stock";
+  var stockPricesEndpoint = "http://predict.toine.io/values?type=stock";
   stockPricesEndpoint += "&object=";
   stockPricesEndpoint += encodeURIComponent(String(symbol).trim());
   stockPricesEndpoint += "&start=";

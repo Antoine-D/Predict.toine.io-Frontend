@@ -10,7 +10,7 @@
     <meta name="author" content="">
     <link rel="icon" href="../../favicon.ico">
 
-    <title>Stock Predictor</title>
+    <title>Predict</title>
 
     <link href="assets/css/bootstrap.min.css" rel="stylesheet">
     <link href="assets/css/custom.css" rel="stylesheet">
@@ -85,7 +85,7 @@
         <button id="p-create-button" class="btn btn-lg btn-custom main-button">Create Prediction</button>
       </div>
 
-      <form id="prediction-creation-form" action="http://104.131.219.239:3060/createprediction" method="post" style="display: none;">
+      <form id="prediction-creation-form" action="http://predict.toine.io/createprediction" method="post" style="display: none;">
           <input id="prediction-create-form-predictor" name="predictor" />
           <input id="prediction-create-form-type" name="type" value="stock"/>
           <input id="prediction-create-form-object" name="object" />
@@ -98,10 +98,10 @@
         <hr>
         <p class="col-lg-6">
           <span style="background-color: #53B981;" class="badge">
-            <a style="color: white;" href="/.">Home</a>
+            <a style="color: white;" href="http://predict.toine.io">Home</a>
           </span>
           <span style="background-color: #53B981;" class="badge">
-            <a style="color: white;" href="create">Create</a>
+            <a style="color: white;" href="http://predict.toine.io/create">Create</a>
           </span>
           <div id="prediction-create-errors" style="display: none;"></div>
         </p>
@@ -390,7 +390,7 @@
         */
       var populateSymbolsDropdown = function () {
         // grab the stocks symbols and names
-        var stocksInfoEndpoint = "http://104.131.219.239:3060/objects?type=stock";
+        var stocksInfoEndpoint = "http://predict.toine.io/objects?type=stock";
         var xmlhttp = new XMLHttpRequest();
         xmlhttp.open("GET", stocksInfoEndpoint, true);
         xmlhttp.onreadystatechange=function() {
