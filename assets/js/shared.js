@@ -14,18 +14,6 @@ var getHumanReadableTime = function(dateToGetTimeOf) {
 }
 
 /**
-  * Utility function for getting the EST (time used by server)
-  * Returns a date object
-  */
-var convertDateToEst = function() {
-  var offset = -5.0 // EST
-  var clientDate = new Date();
-  var utc = clientDate.getTime() + (clientDate.getTimezoneOffset() * 60000);
-  var estDate = new Date(utc + (3600000*offset));
-  return estDate;
-}
-
-/**
   * Gets the most recent price of a stock and calls with the optional callback
   */
 var getMostRecentPrice = function(symbol, callback) {
@@ -167,13 +155,14 @@ var populatePriceHistoryGraphTimeInterval = function (symbol, startDateTime, end
             // get the time the price was recorded and add it to the time list
             var priceDate = new Date(0);
             priceDate.setSeconds(stockPriceHistory[i].time);
-            var priceHour = (priceDate.getHours() + 1)%24;
+            var priceTimeString = getHumanReadableTime(priceDate);
+            /*var priceHour = (priceDate.getHours() + 1)%24;
             var priceMinute = priceDate.getMinutes();
             var priceMonth = priceDate.getMonth() + 1;
             var priceDay = priceDate.getDate();
-            var timeSeperator = (priceMinute >= 10) ? ":" : ":0"; // pad with 0 if minute less than 10
+            var timeSeperator = (priceMinute >= 10) ? ":" : ":0"; // pad with 0 if minute less than 10*/
             times.push(priceMonth.toString() + "/" + priceDay.toString() + 
-              " " + priceHour.toString() + timeSeperator + priceMinute.toString());
+              " " + priceTimeString);
         }
         // draw the graph using the times (x-axis) and prices (y-axis)
         drawPriceGraph(symbol, times, prices);
