@@ -26,6 +26,22 @@
     </style>
 
     <div class="container">
+
+      <div id="adsense-banner" style="margin-bottom: 30px;">
+        <!-- Adsense -->
+        <script async src="//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
+        <!-- predict.toine.io index page -->
+        <ins class="adsbygoogle"
+             style="display:block"
+             data-ad-client="ca-pub-0586745008007940"
+             data-ad-slot="4851744310"
+             data-ad-format="auto"></ins>
+        <script>
+        (adsbygoogle = window.adsbygoogle || []).push({});
+        </script>
+      </div>
+
+
       <div class="jumbotron">
         <div>
           <h2 style="color: #53C781; margin-bottom: 20px;">Pick a stock.</h2>
@@ -36,7 +52,7 @@
 
       <div id="current-price-jumbotron" class="jumbotron" style="display: none;">
         <div>
-          <h4>USD ($)</h4>
+          <h4>Current Price ($USD)</h4>
           <h3 id="current-price" class="current-price-massive" style="color: #53B981; margin-bottom: 0px;">
           </h3>
         </div>
@@ -342,6 +358,10 @@
         }
 
         $("#selected-symbol").on("change", function () {
+
+            // hide the adsense banner
+            //$("#adsense-banner").hide();
+
             var selectedSymbol = $("#selected-symbol").val().toString();
             $("#p-object").html(selectedSymbol);
             $("#chart-header-symbol").html(selectedSymbol);
@@ -405,7 +425,7 @@
             // clear the dropdown
             $("#selected-symbol").html("");
             // append the default option to the symbol select
-            var defaultOption = $("<option selected disabled hidden value=''>Select Stock Symbol</option>");
+            var defaultOption = $("<option selected disabled hidden value=''>Select a Stock</option>");
             $("#selected-symbol").append(defaultOption);
             // populate the countries dropdown
             for(var i = 0; i < stocksList.length; i++) {
@@ -421,6 +441,17 @@
 
       populateSymbolsDropdown();
     });
+  </script>
+
+  <!-- analytics -->
+  <script>
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+    ga('create', 'UA-49936760-5', 'auto');
+    ga('send', 'pageview');
   </script>
 </html>
 

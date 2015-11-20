@@ -113,6 +113,8 @@ h2 .symbol {
 .symbol-dropdown {
   font-size: 180%;
   height: 180%;
+  width: 90%;
+  margin-left: 5%;
 }
 
 #prediction-sentence p {
