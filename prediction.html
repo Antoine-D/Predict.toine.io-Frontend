@@ -186,10 +186,18 @@
 
                         // Case: Predictoin is active, so craft summary sentence to display as the reason
                         if (thisPrediction.status == "active") {
-                            var predictionEndDate = convertDateToEst(new Date(0));
+                            var predictionEndDate = new Date(0);
                             predictionEndDate.setSeconds(parseInt(thisPrediction.end));
                             var humanPredictionEndTime = getHumanReadableTime(predictionEndDate);
                             predictionBigSentence = "Prediction is still valid.";
+                            predictionSmallSentence = "You've predicted that the price of " + 
+                                thisPrediction.object.toString() + " will " + 
+                                thisPrediction.action.toString() + " $" + 
+                                thisPrediction.value.toFixed(2).toString() + " by " + 
+                                humanPredictionEndTime + " on " + 
+                                (predictionEndDate.getMonth()+1).toString() + "/" + 
+                                predictionEndDate.getDate().toString() + "/" + 
+                                predictionEndDate.getFullYear().toString() + ".";
                         }
 
                         // Case: Predictoin is not active, so will have a reason field, so display that on the page.
