@@ -158,9 +158,9 @@ var populatePriceHistoryGraphTimeInterval = function (symbol, startDateTime, end
             var priceTimeString = getHumanReadableTime(priceDate);
             /*var priceHour = (priceDate.getHours() + 1)%24;
             var priceMinute = priceDate.getMinutes();
+            var timeSeperator = (priceMinute >= 10) ? ":" : ":0"; // pad with 0 if minute less than 10*/
             var priceMonth = priceDate.getMonth() + 1;
             var priceDay = priceDate.getDate();
-            var timeSeperator = (priceMinute >= 10) ? ":" : ":0"; // pad with 0 if minute less than 10*/
             times.push(priceMonth.toString() + "/" + priceDay.toString() + 
               " " + priceTimeString);
         }
