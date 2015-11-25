@@ -36,7 +36,7 @@
 
       <div class="jumbotron">
         <div>
-          <p style="text-align: left;">Make a prediction on where the price of a stock will go by a certain date or time. Receive an email when your prediction is realized or found to be false.</p>
+          <p style="text-align: left;">Make a prediction on where the price of a stock from the S&P 500 will go by a certain date or time. Receive an email when your prediction is realized or found to be false.</p>
           <a class="btn btn-lg btn-custom main-button" href="create">Make a Prediction</a>
           <a id="check-your-predictions-button" href="#predictions-search-section" class="btn btn-lg btn-custom main-button">Check on your Predictions</a>
         </div>
@@ -128,15 +128,16 @@
               for(var i = 0; i < predictions.length; i++) {
                 var predictionEndDate = new Date(0);
                 predictionEndDate.setSeconds(parseInt(predictions[i].end));
-                var fullPredictionTimeString = predictionEndDate.toLocaleTimeString(); 
+                var fullPredictionTimeString = getHumanReadableTime(predictionEndDate); 
+
                 // create the prediction sentence string
                 var predictionSentenceElement = $("<div class='prediction-search-result'></div>");
                 var predictionSentenceString = "I predict that ";
                 predictionSentenceString += predictions[i].object;
                 predictionSentenceString += " will ";
                 predictionSentenceString += predictions[i].action;
-                predictionSentenceString += " ";
-                predictionSentenceString += predictions[i].value;
+                predictionSentenceString += " $";
+                predictionSentenceString += predictions[i].value.toFixed(2);
                 predictionSentenceString += " by ";
                 predictionSentenceString += fullPredictionTimeString.toLowerCase();
                 predictionSentenceString += " EST on ";
@@ -145,13 +146,27 @@
                 predictionSentenceString += predictionEndDate.getDate().toString();
                 predictionSentenceString += ", ";
                 predictionSentenceString += predictionEndDate.getFullYear().toString();
+
                 // create the prediction link
                 var predictionLink = $("<a class='a-custom'></a>");
                 $(predictionLink).html(predictionSentenceString);
                 $(predictionLink).attr("href", 
                   "http://predict.toine.io/prediction/" + predictions[i]._id);
+
+                // color the link depending on the status of the prediction
+                if(predictions[i].status == "active") {
+                  predictionLink.css('color', '#286090');
+                }
+                else if(predictions[i].status == "true") {
+                  predictionLink.css('color', '#53B981');
+                }
+                else if(predictions[i].status == "false") {
+                  predictionLink.css('color', 'red');
+                }
+
                 // append the prediction link to the prediction element
                 $(predictionSentenceElement).append(predictionLink);
+
                 // append the prediction element to the prediction results section
                 $("#predictions-results-section").append(predictionSentenceElement);
               }

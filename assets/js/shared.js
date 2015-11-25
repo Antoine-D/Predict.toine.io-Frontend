@@ -41,7 +41,7 @@ var getMostRecentPrice = function(symbol, callback) {
           stockPriceHistory[0].hasOwnProperty("value") && 
           stockPriceHistory[0].value != null) {
           if(typeof(callback) == "function") {
-            callback(stockPriceHistory[0].value);
+            callback(stockPriceHistory[0].value.toFixed(2));
           }
         }
     }
