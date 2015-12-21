@@ -145,5 +145,12 @@ h2 .symbol {
     border-color: #FF6600; 
 }
 
+@media (max-width: 768px) {
+  /* margins for on mobile */
+  .jumbotron p {
+    padding: 4px 10px;
+  }
+}
+
 
 
