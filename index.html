@@ -106,7 +106,7 @@
       // when the predictor is being searched for, then send GET request to the server 
       $("#predictions-search-button").on("click", function() {
         var predictorSearchInput = $("#predictor-input").val();
-        var predictionsEndpoint = "http://predict.toine.io/predictions?";
+        var predictionsEndpoint = "/predictions?";
         predictionsEndpoint += "unEncryptedPredictor=";
         predictionsEndpoint += encodeURIComponent(String(predictorSearchInput).trim());
         // create the request result handler
@@ -151,7 +151,7 @@
                 var predictionLink = $("<a class='a-custom'></a>");
                 $(predictionLink).html(predictionSentenceString);
                 $(predictionLink).attr("href", 
-                  "http://predict.toine.io/prediction/" + predictions[i]._id);
+                  "/prediction/" + predictions[i]._id);
 
                 // color the link depending on the status of the prediction
                 if(predictions[i].status == "active") {
@@ -259,7 +259,7 @@
         */
       var populateSymbolsDropdown = function () {
         // grab the stocks symbols and names
-        var stocksInfoEndpoint = "http://predict.toine.io/objects?type=stock";
+        var stocksInfoEndpoint = "/objects?type=stock";
         var xmlhttp = new XMLHttpRequest();
         xmlhttp.open("GET", stocksInfoEndpoint, true);
         xmlhttp.onreadystatechange=function() {
