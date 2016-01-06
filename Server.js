@@ -253,7 +253,6 @@ valuesRouter.use(function (req, res, next) {
   * Insert a prediction into the predictions collection
   */
 var insertPrediction = function (res, predictorCypher, predictionCreateObject) {
-    console.log(new Buffer(predictorCypher).toString('utf8'));
     var currentTime = Math.floor(new Date().getTime() / 1000);
     db.collection('predictions').insertOne({
         predictor: new Buffer(predictorCypher).toString('utf8'),
@@ -296,10 +295,7 @@ var insertPredictorThenPrediction = function (res, callback, predictionCreateObj
 /**
   * Receive prediction creation posts and insert them in the collection
   */
-app.post('/createprediction', function(req, res) {
-
-    console.log(req.body);
-    
+app.post('/createprediction', function(req, res) {    
     // Make sure all of the required fields are in the request body
     if (req.body != null &&
         "predictor" in req.body &&
@@ -316,6 +312,15 @@ app.post('/createprediction', function(req, res) {
         predictionCreateObject.value = parseFloat(req.body.value);
         predictionCreateObject.action = req.body.action;
         predictionCreateObject.end = parseInt(req.body.end);
+        predictionCreateObject.start = Math.floor((new Date()).getTime()/1000);
+
+        // enforce that the prediction end date is at least 5 mins in future 
+        // from the prediction start time (if not redirect to home page)
+        if(predictionCreateObject.start + 5*60 >= predictionCreateObject.end) {
+            res.writeHead(301, { Location: "http://predict.toine.io" });
+            res.end();
+        }
+
         // insert the prediction
         if (!mongoError) {
             var predictorCollection = db.collection('predictors');

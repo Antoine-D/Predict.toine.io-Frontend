@@ -232,7 +232,25 @@
                 $("#prediction-create-form-value").val(value);
                 var endDateUnixTime = Math.floor(endDate.getTime() / 1000);
                 $("#prediction-create-form-end").val(endDateUnixTime);
-                $("#prediction-creation-form").submit();
+
+                // Get current EST time
+                offset = -5.0
+                clientDate = new Date();
+                utc = clientDate.getTime() + 
+                  (clientDate.getTimezoneOffset() * 60000);
+                estDate = new Date(utc + (3600000*offset));
+                estTime = Math.floor(estDate.getTime() / 1000);
+
+                // enforce that end time of prediction must 
+                // be at least 10 minutes in the future
+                if(endDateUnixTime - 9*60 >= estTime)
+                {
+                  $("#prediction-creation-form").submit();
+                }
+                else
+                {
+                  alert("Selected EST time must be at least 10 minutes in the future.");
+                }
             }
 
             else {
