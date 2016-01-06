@@ -86,6 +86,10 @@
 
       <div class="jumbotron" id="predictions-results-section" style="display: none;">
       </div>
+
+      <div class="jumbotron" id="predictions-recent-section">
+      </div>
+
       <footer>
         <hr>
         <p id="copyright-notice">&copy; <a class="a-custom" href="http://www.antoinedahan.com">Antoine Dahan</a></p>
@@ -102,6 +106,51 @@
   <script>
     $(document).ready(function() {
       var monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+
+      var createPredictionSentenceElement = function(prediction) {
+        var predictionEndDate = new Date(0);
+        predictionEndDate.setSeconds(parseInt(prediction.end));
+        var fullPredictionTimeString = getHumanReadableTime(predictionEndDate); 
+
+        // create the prediction sentence string
+        var predictionSentenceElement = $("<div class='prediction-search-result'></div>");
+        var predictionSentenceString = "Prediction that ";
+        predictionSentenceString += prediction.object;
+        predictionSentenceString += " will ";
+        predictionSentenceString += prediction.action;
+        predictionSentenceString += " $";
+        predictionSentenceString += prediction.value.toFixed(2);
+        predictionSentenceString += " by ";
+        predictionSentenceString += fullPredictionTimeString.toLowerCase();
+        predictionSentenceString += " EST on ";
+        predictionSentenceString += monthNames[predictionEndDate.getMonth()];
+        predictionSentenceString += " ";
+        predictionSentenceString += predictionEndDate.getDate().toString();
+        predictionSentenceString += ", ";
+        predictionSentenceString += predictionEndDate.getFullYear().toString();
+
+        // create the prediction link
+        var predictionLink = $("<a class='a-custom'></a>");
+        $(predictionLink).html(predictionSentenceString);
+        $(predictionLink).attr("href", 
+          "/prediction/" + prediction._id);
+
+        // color the link depending on the status of the prediction
+        if(prediction.status == "active") {
+          predictionLink.css('color', '#286090');
+        }
+        else if(prediction.status == "true") {
+          predictionLink.css('color', '#53B981');
+        }
+        else if(prediction.status == "false") {
+          predictionLink.css('color', 'red');
+        }
+
+        // append the prediction link to the prediction element
+        $(predictionSentenceElement).append(predictionLink);
+
+        return predictionSentenceElement;
+      }
 
       // when the predictor is being searched for, then send GET request to the server 
       $("#predictions-search-button").on("click", function() {
@@ -120,52 +169,15 @@
             $("#predictions-results-section").html("");
             if(predictions.length > 0) {
               var predictorsPredictionsHeader = 
-                $("<h4 style='text-align: center;''>Your Predictions</h4>");
+                $("<h4 style='text-align: center;''>User's Predictions</h4>");
               $("#predictions-results-section").append(predictorsPredictionsHeader);
 
               // for each of the predictor's predictions, append the sentence in 
               // the predictions-results-section.
               for(var i = 0; i < predictions.length; i++) {
-                var predictionEndDate = new Date(0);
-                predictionEndDate.setSeconds(parseInt(predictions[i].end));
-                var fullPredictionTimeString = getHumanReadableTime(predictionEndDate); 
-
-                // create the prediction sentence string
-                var predictionSentenceElement = $("<div class='prediction-search-result'></div>");
-                var predictionSentenceString = "I predict that ";
-                predictionSentenceString += predictions[i].object;
-                predictionSentenceString += " will ";
-                predictionSentenceString += predictions[i].action;
-                predictionSentenceString += " $";
-                predictionSentenceString += predictions[i].value.toFixed(2);
-                predictionSentenceString += " by ";
-                predictionSentenceString += fullPredictionTimeString.toLowerCase();
-                predictionSentenceString += " EST on ";
-                predictionSentenceString += monthNames[predictionEndDate.getMonth()];
-                predictionSentenceString += " ";
-                predictionSentenceString += predictionEndDate.getDate().toString();
-                predictionSentenceString += ", ";
-                predictionSentenceString += predictionEndDate.getFullYear().toString();
-
-                // create the prediction link
-                var predictionLink = $("<a class='a-custom'></a>");
-                $(predictionLink).html(predictionSentenceString);
-                $(predictionLink).attr("href", 
-                  "/prediction/" + predictions[i]._id);
-
-                // color the link depending on the status of the prediction
-                if(predictions[i].status == "active") {
-                  predictionLink.css('color', '#286090');
-                }
-                else if(predictions[i].status == "true") {
-                  predictionLink.css('color', '#53B981');
-                }
-                else if(predictions[i].status == "false") {
-                  predictionLink.css('color', 'red');
-                }
-
-                // append the prediction link to the prediction element
-                $(predictionSentenceElement).append(predictionLink);
+                
+                var predictionSentenceElement = 
+                  createPredictionSentenceElement(predictions[i]);
 
                 // append the prediction element to the prediction results section
                 $("#predictions-results-section").append(predictionSentenceElement);
@@ -179,8 +191,6 @@
         }
 
         xmlhttp.send();
-
-        console.log("here");
       });
 
       $("#selected-symbol").on("change", function () {
@@ -209,10 +219,6 @@
         // show the current price and the price graph
         $("#current-price-jumbotron").show();
         $("#stock-price-history").show();
-        
-
-        // show the footer and set copyright year in footer
-        $($("footer")[0]).show();
       });
 
       /* adding listeners to chart time interval buttons */
@@ -288,7 +294,46 @@
         xmlhttp.send();
       };
 
+
+            /**
+        * Populate the stocks symbol dropdown
+        */
+      var populateRecentPredictions = function () {
+        var recentPredictionsEndpoint = "/recent_predictions";
+        var xmlhttp = new XMLHttpRequest();
+        xmlhttp.open("GET", recentPredictionsEndpoint, true);
+        xmlhttp.onreadystatechange=function() {
+          // if the status is correct, attempt to parse the response as an object
+          if(xmlhttp.readyState==4 && xmlhttp.status==200) {
+            var rawRecentPredictions = xmlhttp.responseText;
+            var recentPredictionsList = JSON.parse(rawRecentPredictions);
+            console.log(recentPredictionsList);
+            // sort the stocks info data array by symbol
+            recentPredictionsList.sort(function (predictionA, predictionB) {
+                return predictionA.start <= predictionB.start;
+            });
+            
+            // clear the recent predictions section
+            $("#predictions-recent-section").html("");
+
+            $("#predictions-recent-section").append(
+              "<h4 style='font-weight: 200;'>Recent Predictions</h4>");
+
+            // populate the recent predictions area
+            for(var i = 0; i < recentPredictionsList.length; i++) {
+              var predictionSentenceElement = 
+                  createPredictionSentenceElement(recentPredictionsList[i]);
+                  
+              // append the prediction element to the prediction results section
+              $("#predictions-recent-section").append(predictionSentenceElement);
+            }
+          }
+        }
+        xmlhttp.send();
+      };
+
       populateSymbolsDropdown();
+      populateRecentPredictions();
 
       // set copyright year in footer
       $("#copyright-notice").html(
@@ -301,6 +346,8 @@
       $("#predictions-search-button").click(function() {
         $("#predictions-results-section").show();
       });
+
+      // fill the recent predictions box
 
     });
   </script>

@@ -126,6 +126,30 @@ predictionRouter.use(function (req, res, next) {
     res.sendFile(path.join(__dirname+"/prediction.html"));
 });
 
+/**
+  * Recent predictions router 
+  * (for getting 20 most recent predictions)
+  */
+var recentPredictionsRouter = express.Router();
+app.use('/recent_predictions', recentPredictionsRouter);
+recentPredictionsRouter.use(function (req, res, next) {
+    res.setHeader('Content-Type', 'application/json');
+    var url = require('url');
+    var url_parts = url.parse(req.originalUrl, true);
+
+    if (!mongoError) {
+        var predictionsCollection = db.collection('predictions');
+        // get all the stock's symbols and names from the table
+        predictionsCollection.find({}).sort({start: -1}).limit(20).toArray(function (err, result) {
+            // send the response in JSON format
+            res.send(JSON.stringify(result));
+        });
+    }
+    else {
+        res.send(JSON.stringify({ status: "failure", reason: "Error occured during database query." }));
+    }
+});
+
 /** 
   * Predictions router (for getting predictions as JSON)
   */
