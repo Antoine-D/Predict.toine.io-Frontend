@@ -186,15 +186,22 @@
 
                         // Case: Predictoin is active, so craft summary sentence to display as the reason
                         if (thisPrediction.status == "active") {
+                            var predictionStartDate = new Date(0);
+                            predictionStartDate.setSeconds(parseInt(thisPrediction.start));
+
                             var predictionEndDate = new Date(0);
                             predictionEndDate.setSeconds(parseInt(thisPrediction.end));
-                            var humanPredictionEndTime = getHumanReadableTime(predictionEndDate);
+
                             predictionBigSentence = "Prediction is still valid.";
-                            predictionSmallSentence = "You've predicted that the price of " + 
-                                thisPrediction.object.toString() + " will " + 
-                                thisPrediction.action.toString() + " $" + 
+                            predictionSmallSentence = "The prediction was made at " + 
+                                getHumanReadableTime(predictionStartDate) + " on " + 
+                                (predictionStartDate.getMonth()+1).toString() + "/" + 
+                                predictionStartDate.getDate().toString() + "/" + 
+                                predictionStartDate.getFullYear().toString() +
+                                " that the price of " + thisPrediction.object.toString() + 
+                                " will " + thisPrediction.action.toString() + " $" + 
                                 thisPrediction.value.toFixed(2).toString() + " by " + 
-                                humanPredictionEndTime + " on " + 
+                                getHumanReadableTime(predictionEndDate) + " on " + 
                                 (predictionEndDate.getMonth()+1).toString() + "/" + 
                                 predictionEndDate.getDate().toString() + "/" + 
                                 predictionEndDate.getFullYear().toString() + ".";
