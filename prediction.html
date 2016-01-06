@@ -72,10 +72,10 @@
             <hr>
             <p class="col-lg-6">
                 <span style="background-color: #53B981;" class="badge">
-                    <a style="color: white;" href="http://predict.toine.io">Home</a>
+                    <a style="color: white;" href="/">Home</a>
                 </span>
                 <span style="background-color: #53B981;" class="badge">
-                    <a style="color: white;" href="http://predict.toine.io/create">Create</a>
+                    <a style="color: white;" href="/create">Create</a>
                 </span>
             </p>
             <p class="col-lg-6" id="copyright-notice">&copy; <a class="a-custom" href="http://www.antoinedahan.com">Antoine Dahan </a>
@@ -168,7 +168,7 @@
             var thisUrl = window.location.href;
             var predictionId = thisUrl.substring(thisUrl.indexOf('prediction/') + 
                 "prediction/".length);
-            var predictionsEndpoint = "http://predict.toine.io/predictions?id=";
+            var predictionsEndpoint = "/predictions?id=";
             predictionsEndpoint += predictionId.toString();
             var xmlhttp = new XMLHttpRequest();
             xmlhttp.open("GET", predictionsEndpoint, true);

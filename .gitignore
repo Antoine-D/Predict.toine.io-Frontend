@@ -6,3 +6,5 @@ node_modules/*
 
 looted_server_info
 looted_server_info/*
+
+nohup.out

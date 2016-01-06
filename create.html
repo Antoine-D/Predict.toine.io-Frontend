@@ -97,7 +97,7 @@
         
       </div>
 
-      <form id="prediction-creation-form" action="http://predict.toine.io/createprediction" method="post" style="display: none;">
+      <form id="prediction-creation-form" action="/createprediction" method="post" style="display: none;">
           <input id="prediction-create-form-predictor" name="predictor" />
           <input id="prediction-create-form-type" name="type" value="stock"/>
           <input id="prediction-create-form-object" name="object" />
@@ -110,10 +110,10 @@
         <hr>
         <p class="col-lg-6">
           <span style="background-color: #53B981;" class="badge">
-            <a style="color: white;" href="http://predict.toine.io">Home</a>
+            <a style="color: white;" href="/">Home</a>
           </span>
           <span style="background-color: #53B981;" class="badge">
-            <a style="color: white;" href="http://predict.toine.io/create">Create</a>
+            <a style="color: white;" href="/create">Create</a>
           </span>
           <div id="prediction-create-errors" style="display: none;"></div>
         </p>
@@ -140,13 +140,13 @@
         var setPredictionSentenceHTML = function(width) {
           if(width >= 768) {
             // first row
-            var firstRow = $("<p class='form-inline'><span>I predict</span> <span id='p-object' style='background-color: black; color: #FFCC00; padding: 4px; border-radius: 4px;'></span> <span>will</span> <select id='p-action' class='form-control' style='margin: 10px auto; display: inline-block;'><option>reach above</option><option>sink below</option><option>stay above</option><option>stay below</option></select></p>");
+            var firstRow = $("<p class='form-inline'><span>I predict</span> <span id='p-object' style='background-color: black; color: #FFCC00; padding: 4px; border-radius: 4px;'></span> <span>will</span> <select id='p-action' class='form-control' style='margin: 10px auto; display: inline-block; height: 110%;'><option>reach above</option><option>sink below</option><option>stay above</option><option>stay below</option></select></p>");
 
             var secondRow = $("<p class='form-inline'>$<input id='p-value' type='number' value='100.00' step='0.01' style='width: 100px;' min='0'> <span>by</span> <input id='p-end-time' type='time' value='23:59'> <span>on</span></p>");
 
-            var thirdRow = $("<p class='form-inline'><select id='p-end-year' class='form-control form-group' style='width: 30%'></select><select id='p-end-month' class='form-control form-group' style='width: 30%'></select><select id='p-end-day' class='form-control form-group' style='width: 30%'></select></p>");
+            var thirdRow = $("<p class='form-inline'><select id='p-end-year' class='form-control form-group' style='width: 30%; height: 110%;'></select><select id='p-end-month' class='form-control form-group' style='width: 30%; height: 110%;'></select><select id='p-end-day' class='form-control form-group' style='width: 30%;  height: 110%;'></select></p>");
 
-            var forthRow = $("<p class='form-inline'><input id='p-predictor' class='form-control' placeholder='your email (to get notified of the prediction result)' type='text'></p>");
+            var forthRow = $("<p class='form-inline'><input id='p-predictor' class='form-control' placeholder='your email (to get notified of the prediction result)' type='email'></p>");
 
             $("#prediction-sentence").append(firstRow);
             $("#prediction-sentence").append(secondRow);
@@ -453,7 +453,7 @@
         */
       var populateSymbolsDropdown = function () {
         // grab the stocks symbols and names
-        var stocksInfoEndpoint = "http://predict.toine.io/objects?type=stock";
+        var stocksInfoEndpoint = "/objects?type=stock";
         var xmlhttp = new XMLHttpRequest();
         xmlhttp.open("GET", stocksInfoEndpoint, true);
         xmlhttp.onreadystatechange=function() {
