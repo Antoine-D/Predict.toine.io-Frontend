@@ -33,17 +33,30 @@ var getMostRecentPrice = function(symbol, callback) {
   xmlhttp.onreadystatechange=function() {
     // if the status is correct, attempt to parse the response as an object
     if(xmlhttp.readyState==4 && xmlhttp.status==200) {
-        var rawstockPriceHistory = xmlhttp.responseText;
-        var stockPriceHistory = JSON.parse(rawstockPriceHistory);
-        stockPriceHistory.sort(compareValueObjects); // make most recent value first
-        // if the value exists and the html input element exists to place it in
-        if(stockPriceHistory.length > 0 && 
-          stockPriceHistory[0].hasOwnProperty("value") && 
-          stockPriceHistory[0].value != null) {
-          if(typeof(callback) == "function") {
-            callback(stockPriceHistory[0].value.toFixed(2));
+      var rawstockPriceHistory = xmlhttp.responseText;
+      var stockPriceHistory = JSON.parse(rawstockPriceHistory);
+      stockPriceHistory.sort(compareValueObjects); // make most recent value first
+      // if the value exists and the html input element exists to place it in
+      if(stockPriceHistory.length > 0)
+      {
+        // get the most recent price from the past hour
+        var mostRecetPrice = null;
+        for(var priceI = 0; priceI < stockPriceHistory.length; priceI++)
+        {
+          if(mostRecetPrice == null || 
+            stockPriceHistory[priceI].time > mostRecetPrice.time)
+          {
+            mostRecetPrice = stockPriceHistory[priceI];
           }
         }
+
+        if(typeof(callback) == "function" && 
+          mostRecetPrice.hasOwnProperty("value") &&
+          mostRecetPrice.value != null) {
+
+          callback(mostRecetPrice.value.toFixed(2));
+        }
+      }
     }
   }
 
