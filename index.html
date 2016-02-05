@@ -169,7 +169,7 @@
             $("#predictions-results-section").html("");
             if(predictions.length > 0) {
               var predictorsPredictionsHeader = 
-                $("<h4 style='text-align: center;''>User's Predictions</h4>");
+                $("<h4 style='font-weight: 200;'>User's Predictions</h4>");
               $("#predictions-results-section").append(predictorsPredictionsHeader);
 
               // for each of the predictor's predictions, append the sentence in 
@@ -340,11 +340,13 @@
         $("#copyright-notice").html() + " " + (new Date()).getFullYear());
 
       $("#check-your-predictions-button").click(function() {
+        $("#predictions-recent-section").hide();
         $("#predictions-search-section").show();
       });
 
       $("#predictions-search-button").click(function() {
         $("#predictions-results-section").show();
+
       });
 
       // fill the recent predictions box
