@@ -78,10 +78,10 @@
         <div class="row">
            <div class="col-md-4">
                <!-- by default the 24 hour price history is selected -->
-               <button class="btn btn-custom chart-time-interval-button selected-chart-time-interval">Past 24 Hours</button>
+               <button class="btn btn-custom chart-time-interval-button">Past 24 Hours</button>
            </div>
            <div class="col-md-4">
-              <button class="btn btn-custom chart-time-interval-button" style="">Past Month</button>
+              <button class="btn btn-custom chart-time-interval-button selected-chart-time-interval" style="">Past Month</button>
            </div>
            <div class="col-md-4">
                <button class="btn btn-custom chart-time-interval-button">Past Year</button>
@@ -146,7 +146,7 @@
 
             var thirdRow = $("<p class='form-inline'><select id='p-end-year' class='form-control form-group' style='width: 30%; height: 110%;'></select><select id='p-end-month' class='form-control form-group' style='width: 30%; height: 110%;'></select><select id='p-end-day' class='form-control form-group' style='width: 30%;  height: 110%;'></select></p>");
 
-            var forthRow = $("<p class='form-inline'><input id='p-predictor' class='form-control' placeholder='your email (to get notified of the prediction result)' type='email'></p>");
+            var forthRow = $("<p class='form-inline'><input id='p-predictor' class='form-control' placeholder='your email (to get notified of the prediction result)' type='email' autocapitalize=off ></p>");
 
             $("#prediction-sentence").append(firstRow);
             $("#prediction-sentence").append(secondRow);
@@ -410,15 +410,15 @@
             $("#chart-header-symbol").html(selectedSymbol);
             
             // populate the price history graph with the recorded prices over the past 24 hours
-            var nowTime = parseInt((new Date).getTime()/1000);
-            var twentyFourHoursAgoTime = nowTime - (24*60*60);
-            populatePriceHistoryGraphTimeInterval($(event.target).val(),
-              twentyFourHoursAgoTime,
+            var nowTime = parseInt((new Date).getTime() / 1000);
+            var thirtyDaysAgoTime = nowTime - (30 * 24 * 60 * 60);
+            populatePriceHistoryGraphHistorical($(event.target).val(),
+              thirtyDaysAgoTime,
               nowTime);
 
             $(".chart-time-interval-button").each(function () {
               $(this).removeClass("selected-chart-time-interval");
-              if($(this).html() == "Past 24 Hours") {
+              if($(this).html() == "Past Month") {
                 $(this).addClass("selected-chart-time-interval");
               }
             });

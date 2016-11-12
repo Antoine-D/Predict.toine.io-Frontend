@@ -54,10 +54,10 @@
             <div class="row">
                 <div class="col-md-4">
                    <!-- by default the 24 hour price history is selected -->
-                    <button class="btn btn-custom chart-time-interval-button selected-chart-time-interval">Past 24 Hours</button>
+                    <button class="btn btn-custom chart-time-interval-button">Past 24 Hours</button>
                 </div>
                 <div class="col-md-4">
-                    <button class="btn btn-custom chart-time-interval-button" style="">Past Month</button>
+                    <button class="btn btn-custom chart-time-interval-button selected-chart-time-interval" style="">Past Month</button>
                 </div>
                 <div class="col-md-4">
                     <button class="btn btn-custom chart-time-interval-button">Past Year</button>
@@ -89,8 +89,8 @@
 </body>
 
 <script src="../assets/js/jquery-1.11.3.min.js"></script>
-<script src="assets/js/highcharts.js"></script>
-<script src="assets/js/exporting.js"></script>
+<script src="../assets/js/highcharts.js"></script>
+<script src="../assets/js/exporting.js"></script>
 <script src="../assets/js/shared.js"></script>
 
 <script>
@@ -101,14 +101,14 @@
             $("#chart-header-symbol").html(predictionSymbol);
             
             // populate the price history graph with the recorded prices over the past 24 hours
-            var nowTime = parseInt((new Date).getTime()/1000);
-            var twentyFourHoursAgoTime = nowTime - (24*60*60);
-            populatePriceHistoryGraphTimeInterval(predictionSymbol,
-              twentyFourHoursAgoTime,
+            var nowTime = parseInt((new Date).getTime() / 1000);
+            var thirtyDaysAgoTime = nowTime - (30 * 24 * 60 * 60);
+            populatePriceHistoryGraphHistorical(predictionSymbol,
+              thirtyDaysAgoTime,
               nowTime);
             $(".chart-time-interval-button").each(function () {
               $(this).removeClass("selected-chart-time-interval");
-              if($(this).html() == "Past 24 Hours") {
+              if($(this).html() == "Past Month") {
                 $(this).addClass("selected-chart-time-interval");
               }
             });

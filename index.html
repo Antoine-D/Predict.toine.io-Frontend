@@ -108,6 +108,13 @@
       var monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 
       var createPredictionSentenceElement = function(prediction) {
+
+
+        if ((!('object' in prediction) || prediction['object'] == null) || (!('action' in prediction) || prediction['action'] == null) || (!('value' in prediction) || prediction['value'] == null) || (!('_id' in prediction) || prediction['_id'] == null) || (!('status' in prediction) || prediction['status'] == null) || (!('end' in prediction) || prediction['end'] == null)) {
+          console.log("skipped");
+          return;
+        }
+
         var predictionEndDate = new Date(0);
         predictionEndDate.setSeconds(parseInt(prediction.end));
         var fullPredictionTimeString = getHumanReadableTime(predictionEndDate); 
